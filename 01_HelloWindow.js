@@ -13,29 +13,32 @@ canvas.height = 500;
 // Initialize WebGL settings: viewport and clear color
 gl.viewport(0, 0, canvas.width, canvas.height);
 
-// Start rendering
-gl.enable(gl.SCISSOR_TEST);
-
-function q() {
-    gl.scissor(0,canvas.height/2, canvas.width/2, canvas.height/2);
+// Quadrants draw function
+function drawQuadrants() {
+    gl.enable(gl.SCISSOR_TEST);
+    const halfH = canvas.height / 2;
+    const halfW = canvas.width / 2;
+    gl.scissor(0, halfH, halfW, halfH);
     gl.clearColor(0, 1, 0, 1.0);
     render();
-    gl.scissor(canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2);
+    gl.scissor(halfW, halfH, halfW, halfH);
     gl.clearColor(1, 0, 0, 1.0);
     render();
-    gl.scissor(0,0, canvas.width/2, canvas.height/2);
+    gl.scissor(0, 0, halfW, halfH);
     gl.clearColor(0, 0, 1, 1.0);
     render();
-    gl.scissor(canvas.width/2, 0, canvas.width/2, canvas.height/2);
+    gl.scissor(halfW, 0, halfW, halfH);
     gl.clearColor(1, 1, 0, 1.0);
     render();
+    gl.disable(gl.SCISSOR_TEST);
 }
 
-q();
+// render
+drawQuadrants();
 
 // Render loop
 function render() {
-    gl.clear(gl.COLOR_BUFFER_BIT);    
+    gl.clear(gl.COLOR_BUFFER_BIT);
     // Draw something here
 }
 
@@ -44,6 +47,6 @@ window.addEventListener('resize', () => {
     canvas.width = Math.min(window.innerWidth, window.innerHeight);
     canvas.height = Math.min(window.innerWidth, window.innerHeight);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    q();
+    drawQuadrants();
 });
 
