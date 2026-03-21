@@ -1,7 +1,6 @@
 import { resizeAspectRatio, setupText } from "../util/util.js"
 import { Shader, readShaderFile } from '../util/shader.js';
 
-
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 
@@ -57,7 +56,7 @@ function setVAO(gl, vertexSource) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);    // for 2D coordinates
 
     // unbind VAO
-    gl.enableVertexAttribArray(null);
+    gl.enableVertexAttribArray(0);
 }
 
 // render
@@ -76,33 +75,31 @@ function render() {
 
 function move() {
     const isAnyKeyPressed = Object.values(keys).includes(true);
-    if (!isAnyKeyPressed) {
-        // 아무 키도 안 눌려 있으면 스킵
-        return;
-    }
-    
-    // 매 프레임마다 0.01씩 이동
-    let nextTranslationX = translationX;    // 이동 후 사각형이 캔버스 나갈지 미리 판정
-    let nextTranslationY = translationY;    // 이동 후 사각형이 캔버스 나갈지 미리 판정
-    if(keys['ArrowUp']) {
-        nextTranslationY += boxSpeed;
-    }
-    if(keys['ArrowDown']) {
-        nextTranslationY -= boxSpeed;
-    }
-    if(keys['ArrowLeft']) {
-        nextTranslationX -= boxSpeed;
-    }
-    if(keys['ArrowRight']) {
-        nextTranslationX += boxSpeed;
-    }
-
-    // 사각형 이동 후에 캔버스 나가는지 판정, 안전할 때만 업데이트
-    if(-1.0 + boxSize <= nextTranslationX && nextTranslationX <= 1.0 - boxSize) {
-        translationX = nextTranslationX;
-    }
-    if(-1.0 + boxSize <= nextTranslationY && nextTranslationY <= 1.0 - boxSize) {
-        translationY = nextTranslationY;
+    // 아무 키도 안 눌려 있으면 스킵
+    if (isAnyKeyPressed) {
+        // 매 프레임마다 0.01씩 이동
+        let nextTranslationX = translationX;    // 이동 후 사각형이 캔버스 나갈지 미리 판정
+        let nextTranslationY = translationY;    // 이동 후 사각형이 캔버스 나갈지 미리 판정
+        if(keys['ArrowUp']) {
+            nextTranslationY += boxSpeed;
+        }
+        if(keys['ArrowDown']) {
+            nextTranslationY -= boxSpeed;
+        }
+        if(keys['ArrowLeft']) {
+            nextTranslationX -= boxSpeed;
+        }
+        if(keys['ArrowRight']) {
+            nextTranslationX += boxSpeed;
+        }
+        
+        // 사각형 이동 후에 캔버스 나가는지 판정, 안전할 때만 업데이트
+        if(-1.0 + boxSize <= nextTranslationX && nextTranslationX <= 1.0 - boxSize) {
+            translationX = nextTranslationX;
+        }
+        if(-1.0 + boxSize <= nextTranslationY && nextTranslationY <= 1.0 - boxSize) {
+            translationY = nextTranslationY;
+        }
     }
     // 4) modify rectangle's coordinate with uniform variable
     // setVec2 함수는 /util/shader.js의 Shader 클래스에 정의되어 있음
@@ -110,7 +107,6 @@ function move() {
 }
 
 function setKeyEvents() {
-    const keySet = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
     window.addEventListener('keydown', (e) => {
         if (e.key in keys) keys[e.key] = true;
     });
