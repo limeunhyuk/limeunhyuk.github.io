@@ -57,6 +57,7 @@ function setVAO(gl, vertexSource) {
 
     // unbind VAO
     gl.enableVertexAttribArray(0);
+    gl.bindVertexArray(null);
 }
 
 // render
@@ -136,7 +137,7 @@ setVAO(gl, squareVertices);
 gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
 // 7) message 표시
-// setupTest: /util/util.js에 정의
+// setupText: /util/util.js에 정의
 setupText(canvas, "Use arrow keys to move the rectangle");
 
 // 8) builtin window resize EventHandler from /util/util.js
