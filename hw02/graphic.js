@@ -54,9 +54,9 @@ function setVAO(gl, vertexSource) {
     // 셰이더가 값 어떻게 해석할지 설정
     // 한 번에 데이터 2개씩, 개당 사이즈는 FLOAT(4byte)
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);    // for 2D coordinates
+    gl.enableVertexAttribArray(0);
 
     // unbind VAO
-    gl.enableVertexAttribArray(0);
     gl.bindVertexArray(null);
 }
 
