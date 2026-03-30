@@ -33,7 +33,7 @@ let circleInfo = {              // 중심 좌표, 반지름 정보
 let lines = [];                 // line segment 정보들을 저장하는 array, 선분 하나만 필요하지만 확장성을 위해 일단 배열로 만듦
 let points = [];                // point 정보들을 저장하는 array
 let axes = new Axes(gl, 0.85);  // x, y axes 그려주는 object (util.js)
-let textOverlay;                // circle 정보 표시 text object
+let textOverlay1;                // circle 정보 표시 text object
 let textOverlay2;               // line segment 정보 표시 text object
 let textOverlay3;               // intersection 정보 표시 text object
 
@@ -140,6 +140,10 @@ function setupMouseEvents() {
                 circleInfo.cy = startPoint[1];
                 circleInfo.r = r;
 
+                // update text: circle
+                updateText(textOverlay1, "Circle: center (" + circleInfo.cx.toFixed(2) + ", " + circleInfo.cy.toFixed(2) +
+                    ") radius = " + circleInfo.r.toFixed(2));
+
                 drawType = DRAW_TYPE.LINE;  // 선 그리기로 변경
             }
             else if(drawType == DRAW_TYPE.LINE) {
@@ -153,14 +157,33 @@ function setupMouseEvents() {
     
                 lines.push([...startPoint, ...endPoint]);
     
-                updateText(textOverlay, "Line segment: (" + lines[0][0].toFixed(2) + ", " + lines[0][1].toFixed(2) + 
+                // update text: line segment
+                updateText(textOverlay2, "Line segment: (" + lines[0][0].toFixed(2) + ", " + lines[0][1].toFixed(2) + 
                     ") ~ (" + lines[0][2].toFixed(2) + ", " + lines[0][3].toFixed(2) + ")");
-                updateText(textOverlay2, "Click and drag to draw the second line segment");
 
+
+                // 4) intersect point 구하기
                 const intersects = getIntersect(lines[0][0], lines[0][1], lines[0][2], lines[0][3], circleInfo.cx, circleInfo.cy, circleInfo.r);
                 intersects.forEach((p) => {
                     points.push(new Float32Array(p));
                 });
+
+                // update text: intersection points
+                switch(intersects.length) {
+                case 0:
+                    updateText(textOverlay3, "No intersection");
+                    break;
+                case 1:
+                    updateText(textOverlay3, "Intersection Points: 1 Point 1: (" + intersects[0][0].toFixed(2) + 
+                        ", " + intersects[0][1].toFixed(2) + ")");
+                    break;
+                case 2:
+                    updateText(textOverlay3, "Intersection Points: 2 Point 1: (" + intersects[0][0].toFixed(2) + 
+                        ", " + intersects[0][1].toFixed(2) + ") Point 2: (" + intersects[1][0].toFixed(2) + ", "
+                         + intersects[1][1].toFixed(2) + ")");
+                    break;
+                }
+                
                 drawType = null;
             }
 
@@ -191,38 +214,42 @@ function createCircleVertices(cx, cy, radius, segments) {
     return new Float32Array(vertices);
 }
 
-// calculate and render intersection points & texts
-// TODO: AI티 지우기
+/** 4) calculate and render intersection points & texts.
+ *   (lx1, ly1), (lx2, ly2): line segment,
+ *   (cx, cy): center of the circle,
+ *   r: radius of the circle,
+ * @returns [p1, p2]
+*/
 function getIntersect(lx1, ly1, lx2, ly2, cx, cy, r) {
-    // 1. 선분의 방향 벡터 (dx, dy)와 시작점에서 원의 중심까지의 벡터 (fx, fy) 계산
+    // 선분의 방향 벡터 (dx, dy), 선분의 시작점에서 원의 중심까지의 벡터 (fx, fy) 계산
     const dx = lx2 - lx1;
     const dy = ly2 - ly1;
     const fx = lx1 - cx;
     const fy = ly1 - cy;
 
-    // 2. 이차방정식 at^2 + 2bt + c = 0 의 계수 결정
-    // t는 선분 위의 위치 비율 (0이면 시작점, 1이면 끝점)
+    // at^2 + 2bt + c = 0 계수
+    // t: 선분 매개변수(0~1: line segment)
     const a = dx * dx + dy * dy;
     const b = 2 * (fx * dx + fy * dy);
     const c = (fx * fx + fy * fy) - (r * r);
 
-    // 3. 판별식 (Discriminant) 계산: b^2 - 4ac
+    // D = b^2 - 4ac
     const discriminant = b * b - 4 * a * c;
 
     if (discriminant < 0) {
-        // 교점 없음
+        // no intersection
         return [];
     } else {
-        // 판별식 루트 계산
+        // sqrt(D)
         const sqrtDisc = Math.sqrt(discriminant);
 
-        // 이차방정식의 해 t1, t2 계산 (근의 공식)
+        // 이차방정식 해 t1, t2 계산 (근의 공식)
         const t1 = (-b - sqrtDisc) / (2 * a);
         const t2 = (-b + sqrtDisc) / (2 * a);
 
         const intersects = [];
 
-        // t값이 0과 1 사이여야 실제 '선분' 위에 존재하는 교점임
+        // t값이 0과 1 사이, 선분 위에 존재하는 해만 필터링
         [t1, t2].forEach(t => {
             if (t >= 0 && t <= 1) {
                 intersects.push([lx1 + t * dx, ly1 + t * dy]);
@@ -243,24 +270,22 @@ function render() {
     
     // 저장된 점/선/원 그리기
     for (let line of lines) {
-        shader.setVec4("u_color", [1.0, 0.0, 1.0, 1.0]);
+        shader.setVec4("u_color", [0.6, 0.6, 1.0, 1.0]);    // 선 색: 하늘색
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(line), gl.STATIC_DRAW);
         gl.bindVertexArray(vao);
         gl.drawArrays(gl.LINES, 0, 2);
     }
     for (let circle of circles) {
-        shader.setVec4("u_color", [1.0, 0.0, 1.0, 1.0]);
+        shader.setVec4("u_color", [1.0, 0.0, 1.0, 1.0]);    // 원 색: 마젠타
 
         gl.bufferData(gl.ARRAY_BUFFER, circle, gl.STATIC_DRAW);
         gl.bindVertexArray(vao);
         gl.drawArrays(gl.LINE_LOOP, 0, circle.length / 2);
     }
     for(let point of points) {
-        console.log(point);
-        shader.setVec4("u_color", [1.0, 1.0, 0.0, 1.0]);
+        shader.setVec4("u_color", [1.0, 1.0, 0.0, 1.0]);    // 점 색: 노란색
 
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.1, 0.1]), gl.STATIC_DRAW);
         gl.bufferData(gl.ARRAY_BUFFER, point, gl.STATIC_DRAW);
         gl.bindVertexArray(vao);
         gl.drawArrays(gl.POINTS, 0, 1);
@@ -276,7 +301,7 @@ function render() {
             gl.drawArrays(gl.LINES, 0, 2);
         }
         else if(drawType == DRAW_TYPE.CIRCLE) {
-            shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]); // 임시 선분의 color는 회색
+            shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]); // 임시 원의 color는 회색
 
             const r = Math.sqrt((startPoint[0] - endPoint[0]) ** 2 + (startPoint[1] - endPoint[1]) ** 2);
             const circle = createCircleVertices(startPoint[0], startPoint[1], r, 30);
@@ -299,7 +324,7 @@ async function initShader() {
     shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
-// ======== main =========
+// ======================== main =========================
 async function main() {
     try {
         if (!initWebGL()) {
@@ -313,9 +338,12 @@ async function main() {
         shader.use();
 
         // setupTest: /util/util.js에 정의
-        setupText(canvas, "Use arrow keys to move the rectangle");
+        textOverlay1 = setupText(canvas, "", 1);
+        textOverlay2 = setupText(canvas, "", 2);
+        textOverlay3 = setupText(canvas, "", 3);
         
         setupMouseEvents();
+        resizeAspectRatio(gl, canvas);
 
         render();
 
