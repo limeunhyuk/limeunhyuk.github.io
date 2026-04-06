@@ -1,4 +1,4 @@
-import { resizeAspectRatio, setupText, updateText, Axes } from '../util/util.js';
+import { resizeAspectRatio } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 
 let isInitialized = false;
@@ -6,9 +6,6 @@ const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 let shader;
 let vao;
-let axes;
-let isAnimating = true;
-let lastTime = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) {
@@ -144,7 +141,7 @@ async function main() {
         await initShader();
         setupBuffers();
 
-        requestAnimationFrame(animate);
+        return true;
 
     } catch (error) {
         console.error('Failed to initialize program:', error);
