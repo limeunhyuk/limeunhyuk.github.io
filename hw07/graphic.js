@@ -1,10 +1,3 @@
-/*-------------------------------------------------------------------------
-12_ArcBall.js
-
-- Viewing a 3D unit cube at origin with perspective projection
-- Rotating the cube by ArcBall interface (by left mouse button dragging)
----------------------------------------------------------------------------*/
-
 import { resizeAspectRatio, Axes } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 import { SquarePyramid } from './squarePyramid.js';
@@ -13,22 +6,25 @@ import { loadTexture } from '../util/texture.js';
 
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
+
 let shader;
-let textOverlay; 
 let isInitialized = false;
 
+// coordinate transform matrix
 let viewMatrix = mat4.create();
 let projMatrix = mat4.create();
 let modelMatrix = mat4.create();
 
-const pyramid = new SquarePyramid(gl);
-const axes = new Axes(gl, 2.2); // create an Axes object with the length of axis 1.5
-const texture = loadTexture(gl, true, './sunrise.jpg');
+// models & textures
+const pyramid = new SquarePyramid(gl);  // 2) pyramid's location & size is same as Hw05
+                                        // check ./squarePyramid.js
+                                        // 3,4) texture uv coordinates
+const axes = new Axes(gl, 2.2);
+const texture = loadTexture(gl, true, './sunrise.jpg'); // load texture image file
 
-// Arcball object: initial distance 5.0, rotation sensitivity 2.0, zoom sensitivity 0.0005
-// default of rotation sensitivity = 1.5, default of zoom sensitivity = 0.001
-let initialDistance = 5.0; 
-let arcBallMode = 'CAMERA';     // 'CAMERA' or 'MODEL'
+// camera & arcball variable
+let initialDistance = 5.0;
+let arcBallMode = 'CAMERA';
 const arcball = new Arcball(canvas, initialDistance, { rotation: 2.0, zoom: 0.0005 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,10 +50,12 @@ function initWebGL() {
         return false;
     }
 
+    // 1) canvas size: 700 * 700
     canvas.width = 700;
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
+    
     gl.clearColor(0.1, 0.2, 0.3, 1.0);
     
     return true;
@@ -70,24 +68,20 @@ async function initShader() {
 }
 
 function render() {
-
-    // clear canvas
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
     viewMatrix = arcball.getViewMatrix();
 
-    // drawing the cube
-    shader.use();  // using the cube's shader
+    shader.use();
     shader.setMat4('u_model', modelMatrix);
     shader.setMat4('u_view', viewMatrix);
     shader.setMat4('u_projection', projMatrix);
+    
     pyramid.draw(shader);
 
-    // drawing the axes (using the axes's shader: see util.js)
     axes.draw(viewMatrix, projMatrix);
 
-    // call the render function the next time for animation
     requestAnimationFrame(render);
 }
 
@@ -99,10 +93,8 @@ async function main() {
         
         await initShader();
 
-        // Initial view transformation matrix (camera at (0,0,-initialDistance)
+        // modelmatrix: identity
         mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(0, 0, -initialDistance));
-
-        // Projection transformation matrix (invariant in the program)
         mat4.perspective(
             projMatrix,
             glMatrix.toRadian(60),  // field of view (fov, degree)
@@ -111,19 +103,12 @@ async function main() {
             100.0 // far
         );
 
-        // activate the texture unit 0
-        // in fact, we can omit this command
-        // when we use the only one texture
         gl.activeTexture(gl.TEXTURE0);
-
-        // bind the texture to the shader
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
-        // pass the u_texture uniform variable to the shader
-        // with the texture unit number
-        shader.setInt('u_texture', 0);
+        shader.use();
+        shader.setInt('u_texture', 0);  // use texture
 
-        // call the render function the first time for animation
         requestAnimationFrame(render);
 
         return true;
