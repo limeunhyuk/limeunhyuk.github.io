@@ -12,7 +12,7 @@ let gameState = "MENU"; // MENU, AIMING, MOVING, ZOOMING_IN, MINIGAME, ZOOMING_O
 let currentTurn = "black";
 let firstCollisionOccurred = false;
 let draggedStone = null;
-let pointerDownPos = new THREE.Vector2();
+let pointerDownPos = new THREE.Vector3();
 let totalBlack = 10, totalWhite = 10;
 let currentBlack = 10, currentWhite = 10;
 
@@ -21,6 +21,12 @@ let rhythmUi, shrinkingRing, rhythmText;
 let turnIndicator, blackScore, whiteScore;
 let rhythmActive = false;
 let ringSize = 250;
+let rhythmSpeed = 1.0;
+
+// Skills
+let currentSkill = "NONE";
+let projectileSkill = "NONE";
+let teleportSelectedStone = null;
 
 let uiContainer, statusContainer;
 let startScreen, gameOverScreen, winnerText;
@@ -226,9 +232,35 @@ function initUI() {
         startScreen.style.display = 'flex';
         uiContainer.style.display = 'none';
         statusContainer.style.display = 'none';
+        document.getElementById('skill-selector').style.display = 'none';
         clearStones();
         gameState = "MENU";
     });
+
+    document.querySelectorAll('.skill-opt').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if (gameState !== "AIMING") return;
+            
+            document.querySelectorAll('.skill-opt').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            currentSkill = e.target.dataset.skill;
+            
+            teleportSelectedStone = null;
+            if (selectionRing) selectionRing.visible = false;
+        });
+    });
+}
+
+function resetSkillTurn() {
+    currentSkill = "NONE";
+    projectileSkill = "NONE";
+    teleportSelectedStone = null;
+    if (selectionRing) selectionRing.visible = false;
+    
+    document.querySelectorAll('.skill-opt').forEach(b => b.classList.remove('active'));
+    const defaultOpt = document.querySelector('.skill-opt[data-skill="NONE"]');
+    if (defaultOpt) defaultOpt.classList.add('active');
 }
 
 function startGame() {
@@ -245,6 +277,9 @@ function startGame() {
     
     gameState = "AIMING";
     firstCollisionOccurred = false;
+    
+    document.getElementById('skill-selector').style.display = 'block';
+    resetSkillTurn();
     
     currentCamPos.set(0, 40, 0);
     currentCamLook.set(0, 0, 0);
@@ -308,6 +343,46 @@ function onPointerDown(e) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(objects.filter(o => o.active).map(o => o.mesh));
     
+    if (currentSkill === "TELEPORT") {
+        raycaster.ray.intersectPlane(plane, pointerDownPos);
+        if (teleportSelectedStone) {
+            if (intersects.length > 0) {
+                const hitMesh = intersects[0].object;
+                const clickedStone = objects.find(o => o.mesh === hitMesh);
+                if (clickedStone && clickedStone.color === currentTurn) {
+                    teleportSelectedStone = clickedStone;
+                    selectionRing.position.set(teleportSelectedStone.mesh.position.x, 0.05, teleportSelectedStone.mesh.position.z);
+                    selectionRing.visible = true;
+                    return;
+                }
+            }
+            
+            const tPos = pointerDownPos;
+            teleportSelectedStone.body.setTranslation({ x: tPos.x, y: 0.125, z: tPos.z }, true);
+            teleportSelectedStone.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            teleportSelectedStone.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            teleportSelectedStone.mesh.position.set(tPos.x, 0.125, tPos.z);
+            
+            createHitEffect(new THREE.Vector3(tPos.x, 0.125, tPos.z));
+            
+            currentTurn = currentTurn === 'black' ? 'white' : 'black';
+            updateStatusUI();
+            resetSkillTurn();
+            return;
+        } else {
+            if (intersects.length > 0) {
+                const hitMesh = intersects[0].object;
+                const clickedStone = objects.find(o => o.mesh === hitMesh);
+                if (clickedStone && clickedStone.color === currentTurn) {
+                    teleportSelectedStone = clickedStone;
+                    selectionRing.position.set(teleportSelectedStone.mesh.position.x, 0.05, teleportSelectedStone.mesh.position.z);
+                    selectionRing.visible = true;
+                }
+            }
+            return;
+        }
+    }
+
     if (intersects.length > 0) {
         const hitMesh = intersects[0].object;
         const clickedStone = objects.find(o => o.mesh === hitMesh);
@@ -325,7 +400,7 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
-    if (!draggedStone || gameState !== "AIMING") return;
+    if (!draggedStone || gameState !== "AIMING" || currentSkill === "TELEPORT") return;
     
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -374,7 +449,7 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
-    if (!draggedStone || gameState !== "AIMING") return;
+    if (!draggedStone || gameState !== "AIMING" || currentSkill === "TELEPORT") return;
     
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -393,6 +468,8 @@ function onPointerUp(e) {
     const power = dragVec.length() * powerMultiplier;
     
     if (power > 0.5) {
+        projectileSkill = currentSkill;
+
         dragVec.normalize().multiplyScalar(power);
         draggedStone.body.applyImpulse({ x: dragVec.x, y: 0, z: dragVec.z }, true);
         
@@ -402,12 +479,50 @@ function onPointerUp(e) {
         
         currentTurn = currentTurn === 'black' ? 'white' : 'black';
         updateStatusUI();
+        
+        document.getElementById('skill-selector').style.display = 'none';
+        resetSkillTurn();
     }
     
     selectionRing.visible = false;
     dragLine.visible = false;
     trajectoryLine.visible = false;
     draggedStone = null;
+}
+
+function executeSkillEffect(obj1, obj2, midPoint, skillType) {
+    const v1 = obj1.prevLinvel || obj1.body.linvel();
+    const v2 = obj2.prevLinvel || obj2.body.linvel();
+    const speed1 = v1.x*v1.x + v1.z*v1.z;
+    const speed2 = v2.x*v2.x + v2.z*v2.z;
+    
+    const attackerStone = speed1 > speed2 ? obj1 : obj2;
+    const defenderStone = speed1 > speed2 ? obj2 : obj1;
+
+    for (let i = 0; i < 3; i++) createHitEffect(midPoint); 
+
+    if (skillType === "DESTROY") {
+        // 강제로 보드 아래로 보내서 checkFallOffBoard의 '나간 판정'을 받게 함
+        defenderStone.body.setTranslation({ x: defenderStone.mesh.position.x, y: -10, z: defenderStone.mesh.position.z }, true);
+    } else if (skillType === "REPULSE") {
+        const radius = 5.0;
+        const repulseForce = 35.0;
+        
+        objects.forEach(obj => {
+            if (obj.active && obj.color !== attackerStone.color) {
+                const dist = obj.mesh.position.distanceTo(midPoint);
+                if (dist < radius) {
+                    const dir = new THREE.Vector3().subVectors(obj.mesh.position, midPoint);
+                    dir.y = 0;
+                    if (dir.lengthSq() < 0.001) dir.set(Math.random() - 0.5, 0, Math.random() - 0.5);
+                    dir.normalize();
+                    
+                    const force = repulseForce * Math.pow(1.0 - (dist / radius), 1.5);
+                    obj.body.applyImpulse({ x: dir.x * force, y: 0, z: dir.z * force }, true);
+                }
+            }
+        });
+    }
 }
 
 function createBlockCharacter(color) {
@@ -526,7 +641,8 @@ function startMiniGame(stone1, stone2) {
             gameState = "MINIGAME";
             rhythmUi.style.display = 'block';
             rhythmActive = true;
-            ringSize = 250;
+            ringSize = 200 + Math.random() * 300; // 200 ~ 500
+            rhythmSpeed = 0.8 + Math.random() * 0.7; // 0.8 ~ 1.5
             rhythmText.innerText = "타이밍에 맞춰 스페이스바!";
             rhythmText.style.color = "#fff";
         })
@@ -818,7 +934,12 @@ function animate(time) {
 
                         if (!firstCollisionOccurred) {
                             firstCollisionOccurred = true;
-                            startMiniGame(obj1, obj2);
+
+                            if (projectileSkill === "RHYTHM") {
+                                startMiniGame(obj1, obj2);
+                            } else if (projectileSkill === "DESTROY" || projectileSkill === "REPULSE") {
+                                executeSkillEffect(obj1, obj2, midPoint, projectileSkill);
+                            }
                         }
                     }
                 }
@@ -852,6 +973,7 @@ function animate(time) {
                 .easing(TWEEN.Easing.Cubic.Out)
                 .onComplete(() => {
                     gameState = "AIMING";
+                    document.getElementById('skill-selector').style.display = 'block';
                 })
                 .start();
         }
@@ -904,7 +1026,7 @@ function animate(time) {
     }
 
     if (rhythmActive) {
-        ringSize -= 1.0; // 리듬게임 속도 대폭 감소 (기존 2.5 -> 1.0)
+        ringSize -= rhythmSpeed; // 랜덤화된 리듬게임 속도
         if (ringSize < 40) { 
             checkRhythmTiming();
         } else {
