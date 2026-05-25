@@ -1,10 +1,14 @@
+/**
+ * manages camera movements.
+ * all camera movements must be conducted through following functions
+ *  - setCameraMode: see CAMERA_MODES
+ *  - setCameraTarget: 
+ */
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ==========================================
-// 1. 모듈 내부 상태 (Private Variables)
-// ==========================================
-
+// Private Variables
 let camera = null;           // 메인 카메라 객체
 let currentMode = 'DEFAULT';  // 현재 카메라 제어 모드
 let orbitControls = null;     // OrbitControls 인스턴스
@@ -15,23 +19,22 @@ let targetCamPos = new THREE.Vector3(0, 40, 0);    // 목표 위치
 let currentCamLook = new THREE.Vector3(0, 0, 0);   // 현재 시선 (보간용)
 let targetCamLook = new THREE.Vector3(0, 0, 0);    // 목표 시선
 
-// ==========================================
-// 2. 외부 노출 상수 및 함수 (Exported API)
-// ==========================================
+
+// Exported APIs
 
 export const CAMERA_MODES = {
-    DEFAULT: 'DEFAULT',
-    FOLLOW: 'FOLLOW',
-    ORBITCONTROL: 'ORBITCONTROL',
-    SKILL: 'SKILL'
+    DEFAULT: 'DEFAULT', // default camera angle. top view
+    FOLLOW: 'FOLLOW',   // follow targetCamPos/targetCamLook with damping
+    ORBITCONTROL: 'ORBITCONTROL',  // for orbit controller
+    SKILL: 'SKILL'  // for custom camera movement. ex) rhythm skill
 };
 
-/** 렌더링을 위해 카메라 객체를 반환합니다. */
+/** getter for camera object */
 export function getCamera() {
     return camera;
 }
 
-/** 카메라 및 컨트롤러 초기화 */
+/** initialize camera */
 export function initCameraManager(scene, domElement) {
     if (!camera) {
         camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -67,7 +70,9 @@ export function initCameraManager(scene, domElement) {
     setCameraMode(CAMERA_MODES.DEFAULT);
 }
 
-/** 카메라 모드 변경 */
+/** change camera mode
+ *  @param {mode} must be one of CAMERA_MODES
+ */
 export function setCameraMode(mode, updater = null) {
     currentMode = mode;
     customUpdater = updater;
@@ -76,13 +81,16 @@ export function setCameraMode(mode, updater = null) {
     }
 }
 
-/** 목표 위치와 시선 설정 */
+/** set target position/direction
+ *  move camera with damping
+ */
 export function setCameraTarget(position, lookAt) {
     if (position) targetCamPos.copy(position);
     if (lookAt) targetCamLook.copy(lookAt);
 }
 
-/** 즉시 이동 */
+/** change camera's position/direction immediately
+ */
 export function snapCameraTo(position, lookAt) {
     if (position) {
         camera.position.copy(position);
@@ -179,7 +187,7 @@ export function updateActionCamera(objects, currentLockedPair, firstCollisionOcc
     return { targetSlowMo, newLockedPair };
 }
 
-/** 매 프레임 카메라 업데이트 */
+/** update camera's position/direction every frame */
 export function updateCamera(deltaTime) {
     console.log(currentMode);
     switch (currentMode) {

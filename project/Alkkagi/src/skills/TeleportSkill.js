@@ -3,6 +3,7 @@ import { state } from '../state.js';
 import { updateStatusUI, resetSkillUI } from '../ui.js';
 import { objects } from '../stone.js';
 import { createHitEffect } from '../skillsVFX.js';
+import { skillManager } from '../SkillManager.js';
 import * as THREE from 'three';
 
 /**
@@ -38,7 +39,7 @@ export class TeleportSkill extends BaseSkill {
             state.currentTurn = state.currentTurn === 'black' ? 'white' : 'black';
             updateStatusUI();
             
-            state.currentSkill = "NONE";
+            skillManager.resetTurn();
             state.teleportSelectedStone = null;
             if (selectionRing) selectionRing.visible = false;
             resetSkillUI();

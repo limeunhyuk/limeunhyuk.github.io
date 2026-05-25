@@ -16,6 +16,7 @@ export const assets = {
 const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
 
+// Preloads .glb models and textures.
 export async function loadAssets() {
     const texturePaths = {
         tatami: 'assets/textures/tatami.png',

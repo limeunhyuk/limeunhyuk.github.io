@@ -1,11 +1,6 @@
 /**
  * src/gameManager.js
- * Role: Main Render and Physics Loop orchestration (Game Manager).
- * Functions:
- * - animate(time): Coordinates physics stepping, camera interpolation, and rendering.
- * - handleGameStateLogic(deltaTime): Main switch for different game phases.
- * - handleCollisionEvents(): Processes physics collisions and triggers skills.
- * - checkMovementStopped(): Detects turn end and triggers cleanup.
+ * Role: Game loop & State transition orchestrator.
  */
 import * as THREE from 'three';
 import TWEEN from 'three/addons/libs/tween.module.js';
@@ -13,13 +8,15 @@ import { renderer, scene, physicsWorld, eventQueue, updateMeshPositions } from '
 import { state } from './state.js';
 import { objects, checkFallOffBoard } from './stone.js';
 import { skillManager } from './SkillManager.js';
-import { RhythmSkill } from './skills/RhythmSkill.js';
 import { updateParticles } from './skillsVFX.js';
-import { shrinkingRing, showGameOver } from './ui.js';
+import { showGameOver } from './ui.js';
 import { updateCamera as updateCameraLogic, setCameraMode, CAMERA_MODES, getCamera, updateActionCamera } from './cameraManager.js';
 
 let lastTime = 0;
 
+/** Game's main loop
+ *  Runs every frame.
+ */
 export function animate(time) {
     requestAnimationFrame(animate);
     const deltaTime = (time - lastTime) / 1000;
@@ -35,6 +32,7 @@ export function animate(time) {
     renderer.render(scene, getCamera());
 }
 
+/** 턴의 진행 상태(조준/이동/연출)에 따른 물리 및 카메라 업데이트 제어 */
 function handleGameStateLogic(deltaTime) {
     if (state.gameState === "MOVING" || state.gameState === "AIMING" || state.gameState === "GAMEOVER") {
         let targetSlowMo = 1.0;
@@ -48,7 +46,7 @@ function handleGameStateLogic(deltaTime) {
         state.currentSlowMoFactor += (targetSlowMo - state.currentSlowMoFactor) * 0.1;
         updateCameraLogic(deltaTime);
 
-        // Sync physics to Three.js
+        // 물리 세계 업데이트 (슬로우 모션 팩터 반영)
         objects.forEach(obj => { if (obj.active) obj.prevLinvel = { ...obj.body.linvel() }; });
         physicsWorld.timestep = (1.0 / 60.0) * Math.max(0.01, state.currentSlowMoFactor);
         physicsWorld.step(eventQueue);
@@ -58,7 +56,7 @@ function handleGameStateLogic(deltaTime) {
             checkMovementStopped();
         }
         
-        updateMeshPositions(objects);
+        updateMeshPositions(objects);   // sync Three.js mesh transform with physics body
         checkFallOffBoard(showGameOver);
 
     } else if (state.gameState === "ZOOMING_IN" || state.gameState === "ZOOMING_OUT" || state.gameState === "MINIGAME" || state.gameState === "RETURN_TO_AIM") {
@@ -66,6 +64,7 @@ function handleGameStateLogic(deltaTime) {
     }
 }
 
+/** 물리 충돌 큐를 비우고, 첫 번째 유효 충돌 시 스킬 트리거 */
 function handleCollisionEvents() {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
         if (started) {
@@ -74,7 +73,6 @@ function handleCollisionEvents() {
             if (obj1 && obj2 && obj1.type === 'stone' && obj2.type === 'stone') {
                 if (!state.firstCollisionOccurred) {
                     state.firstCollisionOccurred = true;
-                    
                     const midPoint = new THREE.Vector3().addVectors(obj1.mesh.position, obj2.mesh.position).multiplyScalar(0.5);
                     skillManager.handleCollision(obj1, obj2, midPoint);
                 }
@@ -83,6 +81,7 @@ function handleCollisionEvents() {
     });
 }
 
+/** 모든 돌의 속도가 임계치 이하인지 확인하여 턴 종료 처리 */
 function checkMovementStopped() {
     let movingCount = 0;
     objects.forEach((obj) => {
@@ -97,13 +96,9 @@ function checkMovementStopped() {
         state.currentSlowMoFactor = 1.0;
         state.lockedPair = null;
 
-        // Turn end cleanup for skills
         skillManager.resetTurn();
-
-        // Camera Manager의 DEFAULT 모드로 전환하여 부드럽게 복귀
         setCameraMode(CAMERA_MODES.DEFAULT);
         
-        // 상태 전환을 위한 지연 처리 (lerp가 어느 정도 완료된 후)
         setTimeout(() => {
             if (state.gameState === "RETURN_TO_AIM") {
                 state.gameState = "AIMING";

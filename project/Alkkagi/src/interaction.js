@@ -20,6 +20,7 @@ export const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
 export let dragLine, trajectoryLine, selectionRing;
 
+// Sets up pointer event listeners and visual drag aids.
 export function initInteraction() {
     window.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);

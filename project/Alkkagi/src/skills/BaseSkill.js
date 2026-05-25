@@ -2,6 +2,7 @@
  * src/skills/BaseSkill.js
  * Role: Base class defining the interface for all skills.
  */
+
 export class BaseSkill {
     constructor(id, name) {
         this.id = id;

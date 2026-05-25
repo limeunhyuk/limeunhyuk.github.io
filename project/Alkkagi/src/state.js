@@ -1,32 +1,29 @@
 /**
  * src/state.js
- * Role: Centralized state object for managing global game variables.
- * - Manages gameState, scores, current turn, camera targets, and slow-motion factors.
+ * Role: Central data container for global game state. (No logic allowed)
  */
 export const state = {
-    // Game State
-    gameState: "MENU", // MENU, AIMING, MOVING, ZOOMING_IN, MINIGAME, ZOOMING_OUT, GAMEOVER, RETURN_TO_AIM
+    // Game Flow
+    gameState: "MENU",           // MENU, AIMING, MOVING, ZOOMING_IN/OUT, MINIGAME, GAMEOVER, RETURN_TO_AIM
     currentTurn: "black",
-    firstCollisionOccurred: false,
+    firstCollisionOccurred: false, // Prevent multiple skill triggers in one turn
     
-    // Scores
+    // Score & Status
     totalBlack: 10,
     totalWhite: 10,
     currentBlack: 10,
     currentWhite: 10,
 
-    // Timing & Slow Motion
-    currentSlowMoFactor: 1.0,
+    // Physics & Timing
+    currentSlowMoFactor: 1.0,    // < 1.0 for slow-motion effect
     frameCount: 0,
 
     // Skills
-    currentSkill: "NONE",
-    projectileSkill: "NONE",
+    currentSkill: "NONE",        // Selected in UI
+    projectileSkill: "NONE",     // Fixed skill to trigger on next collision
     teleportSelectedStone: null,
 
     // Interaction
     draggedStone: null,
-    
-    // Tracking for Lock-On
-    lockedPair: null
+    lockedPair: null             // Closest pair being tracked by Action Camera
 };

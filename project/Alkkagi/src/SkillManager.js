@@ -1,6 +1,6 @@
 /**
  * src/SkillManager.js
- * Role: Central registry and dispatcher for all skills.
+ * Role: Skill registry & event dispatcher.
  */
 import { state } from './state.js';
 import { DefaultSkill } from './skills/DefaultSkill.js';
@@ -12,11 +12,12 @@ import { WallSkill } from './skills/WallSkill.js';
 
 export class SkillManager {
     constructor() {
-        this.skills = new Map();
-        this.currentSkillId = "NONE";
-        this.executingSkillId = null; // Skill whose VFX is playing
+        this.skills = new Map();     // ID-based skill registry
+        this.currentSkillId = "NONE"; // Currently selected skill ID
+        this.executingSkillId = null; // Skill currently showing VFX
     }
 
+    /** 가용 스킬 인스턴스들을 생성하고 등록 */
     initSkills() {
         this.registerSkill(new DefaultSkill());
         this.registerSkill(new TeleportSkill());
@@ -30,6 +31,7 @@ export class SkillManager {
         this.skills.set(skill.id, skill);
     }
 
+    /** 활성 스킬을 변경하고 전역 상태와 동기화 (UI 업데이트용) */
     setSkill(id) {
         if (this.currentSkillId === id) return;
 
@@ -37,7 +39,7 @@ export class SkillManager {
         if (prevSkill) prevSkill.onDeactivate();
 
         this.currentSkillId = id;
-        state.currentSkill = id; // Sync with global state
+        state.currentSkill = id; 
 
         const newSkill = this.skills.get(id);
         if (newSkill) newSkill.onActivate();
@@ -47,10 +49,7 @@ export class SkillManager {
         return this.skills.get(this.currentSkillId);
     }
 
-    get executingSkill() {
-        return this.skills.get(this.executingSkillId);
-    }
-
+    /** onInteract 방식을 사용하는 스킬들을 위한 하위 호환성 유지 */
     handleInteraction(intersects, pointerPos, selectionRing) {
         if (this.currentSkill) {
             return this.currentSkill.onInteract(intersects, pointerPos, selectionRing);
@@ -58,6 +57,7 @@ export class SkillManager {
         return false;
     }
 
+    /** interaction.js에서 전달된 포인터 이벤트를 활성 스킬로 라우팅 */
     handlePointerDown(intersects, pointerPos) {
         if (this.currentSkill) {
             return this.currentSkill.onPointerDown(intersects, pointerPos);
@@ -79,6 +79,7 @@ export class SkillManager {
         return false;
     }
 
+    /** 물리 충돌 발생 시 활성 스킬의 효과 발동 */
     handleCollision(attacker, defender, midPoint) {
         if (this.currentSkill) {
             this.executingSkillId = this.currentSkillId;
@@ -86,17 +87,14 @@ export class SkillManager {
         }
     }
 
+    /** 매 프레임 모든 스킬의 내부 로직/VFX 업데이트 (예: 리듬 게임 링 축소) */
     updateVFX(deltaTime) {
-        // Update all registered skills for VFX that might persist
         for (const skill of this.skills.values()) {
             skill.updateVFX(deltaTime);
         }
     }
 
-    resetExecutingSkill() {
-        this.executingSkillId = null;
-    }
-
+    /** 턴이 끝날 때 모든 스킬의 잔여 물리체/리소스 정리 및 'NONE'으로 복구 */
     resetTurn() {
         for (const skill of this.skills.values()) {
             skill.dispose();

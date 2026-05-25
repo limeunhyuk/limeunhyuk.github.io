@@ -1,16 +1,22 @@
 /**
  * src/engine.js
  * Role: Core Engine initialization for Three.js and Rapier physics.
- * Functions:
- * - initEngine(): Initializes Three.js (scene, camera, renderer, lights) and Rapier physics.
- * - updateMeshPositions(objects): Syncs Three.js mesh transforms with physics bodies.
+ * 
+ * exported variable:
+ * - scene & renderer: for scene management & render
+ * - physicsWorld & eventQueue: for physics
  */
+
 import * as THREE from 'three';
 import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
 
 export let scene, renderer;
 export let physicsWorld, eventQueue;
 
+/** initialize Three.js & Rapier
+ *  Three.js:
+ *  - initialize scene, renderer, scene's composition, camera
+ */
 export async function initEngine() {
     await RAPIER.init();
     physicsWorld = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
@@ -40,7 +46,7 @@ export async function initEngine() {
     });
 }
 
-
+// Syncs Three.js mesh transforms with physics bodies.
 export function updateMeshPositions(objects) {
     objects.forEach((obj) => {
         if (obj.active) {

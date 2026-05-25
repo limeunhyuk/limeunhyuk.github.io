@@ -1,9 +1,6 @@
 /**
  * main.js
- * Role: Application Entry Point and Orchestrator.
- * Functions:
- * - init(): Bootstraps the engine, assets, UI, and animation loop.
- * - startGame(): Initializes a new match with the specified stone counts.
+ * Role: Entry point & Bootstrapping orchestrator.
  */
 import { state } from './src/state.js';
 import { loadAssets } from './src/assets.js';
@@ -17,26 +14,18 @@ import { animate } from './src/gameManager.js';
 import { initCameraManager, setCameraMode, snapCameraTo, CAMERA_MODES } from './src/cameraManager.js';
 import * as THREE from 'three';
 
+/**
+ * Bootstrapping sequence:
+ * Engine -> Camera -> Assets -> Skills -> Env -> Interaction -> UI -> Loop.
+ */
 async function init() {
-    // 1. Initialize Engine (Rapier & Three.js)
     await initEngine();
-
-    // 2. Initialize Camera Manager
     initCameraManager(scene, renderer.domElement);
-
-    // 3. Preload Assets (Textures & GLB Models)
     await loadAssets();
-
-    // 4. Register Skills
     skillManager.initSkills();
-
-    // 5. Create Environment
     createEnvironment();
-
-    // 6. Initialize Interaction (Pointer Events)
     initInteraction();
 
-    // 7. Initialize UI
     initUI({
         onStart: startGame,
         onRestart: () => {
@@ -62,18 +51,16 @@ async function init() {
         },
         onSkillSelect: (skillId, target) => {
             if (state.gameState !== "AIMING") return;
-            
             document.querySelectorAll('.skill-opt').forEach(b => b.classList.remove('active'));
             target.classList.add('active');
-            
             skillManager.setSkill(skillId);
         }
     });
 
-    // 8. Start Animation Loop
     animate();
 }
 
+/** 경기 시작 및 초기화 로직 */
 function startGame() {
     const inputBlack = document.getElementById('input-black');
     const inputWhite = document.getElementById('input-white');

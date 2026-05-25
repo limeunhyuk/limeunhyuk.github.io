@@ -1,14 +1,14 @@
 /**
  * src/environment.js
  * Role: Environment setup for the game board and ground.
- * Functions:
- * - createEnvironment(): Builds the board and floor using GLB models or procedural fallbacks.
  */
 import * as THREE from 'three';
 import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
 import { scene, physicsWorld } from './engine.js';
 import { assets } from './assets.js';
 
+
+// initialize environment(floor & board)'s mesh and physics body
 export function createEnvironment() {
     const boardSize = 15;
 
