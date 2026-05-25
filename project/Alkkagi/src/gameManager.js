@@ -13,17 +13,23 @@ import TWEEN from 'three/addons/libs/tween.module.js';
 import { renderer, scene, camera, physicsWorld, eventQueue, updateMeshPositions } from './engine.js';
 import { state } from './state.js';
 import { objects, checkFallOffBoard } from './stone.js';
-import { handleCollisionSkill, checkRhythmTiming } from './skills.js';
+import { skillManager } from './SkillManager.js';
+import { RhythmSkill } from './skills/RhythmSkill.js';
 import { updateParticles } from './skillsVFX.js';
 import { shrinkingRing, showGameOver } from './ui.js';
 
+let lastTime = 0;
+
 export function animate(time) {
     requestAnimationFrame(animate);
+    const deltaTime = (time - lastTime) / 1000;
+    lastTime = time;
+
     TWEEN.update(time);
     state.frameCount++;
 
-    // \handlePhysics <-
     handleGameStateLogic();
+    skillManager.updateVFX(deltaTime); 
     updateParticles();
     updateRhythmUI();
     
@@ -142,7 +148,9 @@ function handleCollisionEvents() {
             if (obj1 && obj2 && obj1.type === 'stone' && obj2.type === 'stone') {
                 if (!state.firstCollisionOccurred) {
                     state.firstCollisionOccurred = true;
-                    handleCollisionSkill(obj1, obj2);
+                    
+                    const midPoint = new THREE.Vector3().addVectors(obj1.mesh.position, obj2.mesh.position).multiplyScalar(0.5);
+                    skillManager.handleCollision(obj1, obj2, midPoint);
                 }
             }
         }
@@ -212,7 +220,7 @@ function updateCamera(immediate = false) {
         state.currentCamLook = { x: currentCamLookVec.x, y: currentCamLookVec.y, z: currentCamLookVec.z };
     }
 
-    camera.position.set(state.currentCamPos.x, state.currentCamPos.y, state.currentCamPos.z);
+    camera.position.lerp(state.currentCamPos, 0.99);
     camera.lookAt(state.currentCamLook.x, state.currentCamLook.y, state.currentCamLook.z);
 }
 
@@ -220,7 +228,7 @@ function updateRhythmUI() {
     if (state.rhythmActive) {
         state.ringSize -= state.rhythmSpeed;
         if (state.ringSize < 40) { 
-            checkRhythmTiming();
+            RhythmSkill.checkRhythmTiming();
         } else if (shrinkingRing) {
             shrinkingRing.style.width = state.ringSize + 'px';
             shrinkingRing.style.height = state.ringSize + 'px';

@@ -8,6 +8,7 @@
  * - showGameOver(winner): Displays the winner overlay.
  */
 import { state } from './state.js';
+import { skillManager } from './SkillManager.js';
 
 export let rhythmUi, shrinkingRing, rhythmText;
 export let turnIndicator, blackScore, whiteScore;
@@ -39,10 +40,28 @@ export function initUI(callbacks) {
     document.getElementById('btn-restart').addEventListener('click', onRestart);
     document.getElementById('btn-to-start').addEventListener('click', onToStart);
 
-    document.querySelectorAll('.skill-opt').forEach(btn => {
+    generateSkillUI(onSkillSelect);
+}
+
+function generateSkillUI(onSkillSelect) {
+    const container = document.getElementById('skill-options');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const skills = skillManager.getRegisteredSkills();
+
+    skills.forEach(skill => {
+        const btn = document.createElement('button');
+        btn.className = 'skill-opt';
+        if (skill.id === "NONE") btn.classList.add('active');
+        btn.dataset.skill = skill.id;
+        btn.innerText = skill.name;
+        
         btn.addEventListener('click', (e) => {
-            onSkillSelect(e.target.dataset.skill, e.target);
+            onSkillSelect(skill.id, btn);
         });
+        
+        container.appendChild(btn);
     });
 }
 
@@ -70,4 +89,8 @@ export function showGameOver(winner) {
     setTimeout(() => {
         gameOverScreen.style.display = 'flex';
     }, 1000);
+}
+
+export function checkRhythmTiming() {
+    import('./skills/RhythmSkill.js').then(m => m.RhythmSkill.checkRhythmTiming());
 }

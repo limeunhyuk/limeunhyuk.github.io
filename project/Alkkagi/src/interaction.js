@@ -11,7 +11,7 @@ import { camera, scene, physicsWorld } from './engine.js';
 import { state } from './state.js';
 import { objects } from './stone.js';
 import { updateStatusUI, resetSkillUI } from './ui.js';
-import { handleSkillInteraction } from './skills.js';
+import { skillManager } from './SkillManager.js';
 
 export const raycaster = new THREE.Raycaster();
 export const mouse = new THREE.Vector2();
@@ -53,10 +53,11 @@ function onPointerDown(e) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(objects.filter(o => o.active).map(o => o.mesh));
     
-    // Check for specialized skill interactions (e.g., Teleport)
-    const pointerDownPos = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, pointerDownPos);
-    if (handleSkillInteraction(intersects, pointerDownPos, selectionRing)) return;
+    const pointerPos = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, pointerPos);
+    
+    // Delegate to SkillManager
+    if (skillManager.handleInteraction(intersects, pointerPos, selectionRing)) return;
 
     if (intersects.length > 0) {
         const hitMesh = intersects[0].object;
@@ -74,7 +75,10 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
-    if (!state.draggedStone || state.gameState !== "AIMING" || state.currentSkill === "TELEPORT") return;
+    if (!state.draggedStone || state.gameState !== "AIMING") return;
+    
+    // Prevent dragging if current skill is active (e.g. Teleport)
+    if (state.currentSkill === "TELEPORT") return;
     
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -89,7 +93,7 @@ function onPointerMove(e) {
     const maxDrag = 3.5;
     if (dragVec.length() > maxDrag) dragVec.setLength(maxDrag);
     
-    const powerMultiplier = 0.75; 
+    const powerMultiplier = 1.5;
     const power = dragVec.length() * powerMultiplier;
     
     const lineEnd = startVec.clone().sub(dragVec);
@@ -138,7 +142,7 @@ function onPointerUp(e) {
     const maxDrag = 3.5;
     if (dragVec.length() > maxDrag) dragVec.setLength(maxDrag);
 
-    const powerMultiplier = 0.75; 
+    const powerMultiplier = 1.5; 
     const power = dragVec.length() * powerMultiplier;
     
     if (power > 0.5) {

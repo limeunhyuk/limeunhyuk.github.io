@@ -12,23 +12,26 @@ import { createEnvironment } from './src/environment.js';
 import { createStones, clearStones } from './src/stone.js';
 import { initUI, updateStatusUI, resetSkillUI } from './src/ui.js';
 import { initInteraction, selectionRing } from './src/interaction.js';
-import { checkRhythmTiming } from './src/skills.js';
+import { skillManager } from './src/SkillManager.js';
 import { animate } from './src/gameManager.js';
 
 async function init() {
-    // Initialize Engine (Rapier & Three.js)
+    // 1. Initialize Engine (Rapier & Three.js)
     await initEngine();
 
-    // Preload Assets (Textures & GLB Models)
+    // 2. Preload Assets (Textures & GLB Models)
     await loadAssets();
 
-    // Create Environment
+    // 3. Register Skills
+    skillManager.initSkills();
+
+    // 4. Create Environment
     createEnvironment();
 
-    // Initialize Interaction (Pointer Events)
+    // 5. Initialize Interaction (Pointer Events)
     initInteraction();
 
-    // Initialize UI
+    // 6. Initialize UI
     initUI({
         onStart: startGame,
         onRestart: () => {
@@ -52,26 +55,24 @@ async function init() {
             clearStones();
             state.gameState = "MENU";
         },
-        onSkillSelect: (skill, target) => {
+        onSkillSelect: (skillId, target) => {
             if (state.gameState !== "AIMING") return;
             
             document.querySelectorAll('.skill-opt').forEach(b => b.classList.remove('active'));
             target.classList.add('active');
             
-            state.currentSkill = skill;
-            state.teleportSelectedStone = null;
-            if (selectionRing) selectionRing.visible = false;
+            skillManager.setSkill(skillId);
         }
     });
 
-    // Global Key Listeners (Rhythm Game)
+    // 7. Global Key Listeners (Rhythm Game)
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && state.rhythmActive) {
-            checkRhythmTiming();
+            import('./src/skills/RhythmSkill.js').then(m => m.RhythmSkill.checkRhythmTiming());
         }
     });
 
-    // Start Animation Loop
+    // 8. Start Animation Loop
     animate();
 }
 
