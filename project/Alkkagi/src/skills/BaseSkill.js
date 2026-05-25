@@ -20,11 +20,30 @@ export class BaseSkill {
 
     /**
      * Called during pointer events (AIMING state).
+     * @deprecated Use onPointerDown/Move/Up instead.
      * @returns {boolean} - Returns true if the skill handled the interaction and wants to prevent default dragging.
      */
     onInteract(intersects, pointerPos, selectionRing) {
         return false;
     }
+
+    /**
+     * Pointer Down Hook
+     * @returns {boolean} True if the skill intercepted the event.
+     */
+    onPointerDown(intersects, pointerPos) { return false; }
+
+    /**
+     * Pointer Move Hook
+     * @returns {boolean} True if the skill intercepted the event.
+     */
+    onPointerMove(intersects, pointerPos) { return false; }
+
+    /**
+     * Pointer Up Hook
+     * @returns {boolean} True if the skill intercepted the event.
+     */
+    onPointerUp(intersects, pointerPos) { return false; }
 
     /**
      * Called when a collision occurs (MOVING state).

@@ -5,41 +5,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // 1. 모듈 내부 상태 (Private Variables)
 // ==========================================
 
-/** @type {THREE.PerspectiveCamera} 메인 카메라 객체 (캡슐화됨) */
-let camera = null;
+let camera = null;           // 메인 카메라 객체
+let currentMode = 'DEFAULT';  // 현재 카메라 제어 모드
+let orbitControls = null;     // OrbitControls 인스턴스
+let customUpdater = null;     // SKILL 모드용 업데이트 콜백
 
-/** @type {string} 현재 카메라의 제어 모드 (DEFAULT, FOLLOW, ORBITCONTROL, SKILL) */
-let currentMode = 'DEFAULT';
-
-/** @type {OrbitControls} 사용자 인터랙션을 위한 컨트롤러 */
-let orbitControls = null;
-
-/** @type {Function} SKILL 모드 시 실행될 커스텀 카메라 업데이트 함수 */
-let customUpdater = null;
-
-/** @type {THREE.Vector3} 카메라의 현재 위치 보간용 벡터 */
-let currentCamPos = new THREE.Vector3(0, 40, 0);
-
-/** @type {THREE.Vector3} 카메라의 목표 위치 벡터 */
-let targetCamPos = new THREE.Vector3(0, 40, 0);
-
-/** @type {THREE.Vector3} 카메라의 현재 시선 방향 보간용 벡터 */
-let currentCamLook = new THREE.Vector3(0, 0, 0);
-
-/** @type {THREE.Vector3} 카메라의 목표 시선 방향 벡터 */
-let targetCamLook = new THREE.Vector3(0, 0, 0);
+let currentCamPos = new THREE.Vector3(0, 40, 0);   // 현재 위치 (보간용)
+let targetCamPos = new THREE.Vector3(0, 40, 0);    // 목표 위치
+let currentCamLook = new THREE.Vector3(0, 0, 0);   // 현재 시선 (보간용)
+let targetCamLook = new THREE.Vector3(0, 0, 0);    // 목표 시선
 
 // ==========================================
 // 2. 외부 노출 상수 및 함수 (Exported API)
 // ==========================================
 
-/**
- * 카메라 모드 상수
- * - DEFAULT: 중앙을 내려다보는 기본 상태
- * - FOLLOW: 특정 대상이나 위치를 부드럽게 추적하는 상태
- * - ORBITCONTROL: 마우스/터치로 사용자가 자유롭게 카메라를 조작하는 상태
- * - SKILL: 스킬 발동 시 특수한 연출(진동, 줌 등)을 수행하는 상태
- */
 export const CAMERA_MODES = {
     DEFAULT: 'DEFAULT',
     FOLLOW: 'FOLLOW',
@@ -47,12 +26,12 @@ export const CAMERA_MODES = {
     SKILL: 'SKILL'
 };
 
-/**
- * 카메라 매니저 초기화 함수
- * - 카메라 객체를 생성하고, 씬에 추가하며 OrbitControls를 초기화합니다.
- * @param {THREE.Scene} scene - 카메라가 추가될 Three.js 씬 객체
- * @param {HTMLElement} domElement - OrbitControls가 이벤트를 리스닝할 DOM 요소 (주로 renderer.domElement)
- */
+/** 렌더링을 위해 카메라 객체를 반환합니다. */
+export function getCamera() {
+    return camera;
+}
+
+/** 카메라 및 컨트롤러 초기화 */
 export function initCameraManager(scene, domElement) {
     if (!camera) {
         camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -60,21 +39,24 @@ export function initCameraManager(scene, domElement) {
         camera.lookAt(0, 0, 0);
     }
     
-    // 씬에 카메라 추가
     scene.add(camera);
 
-    // OrbitControls 생성
     orbitControls = new OrbitControls(camera, domElement);
     orbitControls.enableDamping = true;
     orbitControls.enabled = false;
     
-    // 현재 카메라 상태 초기화
+    // 우클릭으로 회전하도록 변경
+    orbitControls.mouseButtons = {
+        LEFT: null,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.ROTATE
+    };
+    
     currentCamPos.copy(camera.position);
     targetCamPos.copy(camera.position);
     currentCamLook.set(0, 0, 0);
     targetCamLook.set(0, 0, 0);
 
-    // 윈도우 리사이즈 대응
     window.addEventListener('resize', () => {
         if (camera) {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -85,38 +67,22 @@ export function initCameraManager(scene, domElement) {
     setCameraMode(CAMERA_MODES.DEFAULT);
 }
 
-/**
- * 카메라의 제어 모드를 설정합니다.
- * - 모드에 따라 OrbitControls의 활성화 여부를 자동으로 제어합니다.
- * @param {string} mode - CAMERA_MODES 중 하나
- * @param {Function} [updater=null] - SKILL 모드일 경우 매 프레임 실행될 업데이트 콜백 함수
- */
+/** 카메라 모드 변경 */
 export function setCameraMode(mode, updater = null) {
     currentMode = mode;
     customUpdater = updater;
-
     if (orbitControls) {
-        // ORBITCONTROL 모드일 때만 유저 입력을 허용
         orbitControls.enabled = (mode === CAMERA_MODES.ORBITCONTROL);
     }
 }
 
-/**
- * FOLLOW 또는 TRANSITION 모드에서 사용할 목표 위치와 시선을 설정합니다.
- * @param {THREE.Vector3} [position] - 카메라가 이동할 목표 위치
- * @param {THREE.Vector3} [lookAt] - 카메라가 바라볼 목표 시점
- */
+/** 목표 위치와 시선 설정 */
 export function setCameraTarget(position, lookAt) {
     if (position) targetCamPos.copy(position);
     if (lookAt) targetCamLook.copy(lookAt);
 }
 
-/**
- * 카메라를 특정 위치와 시점으로 즉시 이동(순간이동)시킵니다.
- * - 모든 보간 상태를 초기화하여 끊김 없이 위치를 고정합니다.
- * @param {THREE.Vector3} [position] - 즉시 이동할 위치
- * @param {THREE.Vector3} [lookAt] - 즉시 바라볼 시점
- */
+/** 즉시 이동 */
 export function snapCameraTo(position, lookAt) {
     if (position) {
         camera.position.copy(position);
@@ -131,28 +97,105 @@ export function snapCameraTo(position, lookAt) {
 }
 
 /**
- * 매 프레임 호출되어 카메라의 상태를 업데이트합니다.
- * - 현재 모드에 따라 Lerp 보간, OrbitControls 업데이트, 또는 커스텀 연출을 수행합니다.
- * @param {number} deltaTime - 프레임 간 시간 간격
+ * 액션 카메라 업데이트 (돌 이동 중)
+ * - 가장 가까운 두 돌을 찾아 카메라 목표를 설정하고 슬로우 모션 팩터를 반환합니다.
+ * @param {Array} objects - 물리 객체 배열
+ * @param {Array|null} currentLockedPair - 현재 추적 중인 돌 쌍
+ * @param {boolean} firstCollisionOccurred - 첫 충돌 발생 여부
+ * @returns {Object} { targetSlowMo, newLockedPair }
  */
+export function updateActionCamera(objects, currentLockedPair, firstCollisionOccurred) {
+    let targetSlowMo = 1.0;
+    let newLockedPair = currentLockedPair;
+    
+    // 기본적으로 FOLLOW 모드 유지, 타겟 초기화
+    setCameraMode(CAMERA_MODES.FOLLOW);
+    setCameraTarget(new THREE.Vector3(0, 40, 0), new THREE.Vector3(0, 0, 0));
+
+    if (!firstCollisionOccurred) {
+        let minDistanceSq = 9999;
+        let closestPair = null;
+
+        // Lock-on logic
+        if (newLockedPair && newLockedPair[0].active && newLockedPair[1].active) {
+            const v1 = newLockedPair[0].body.linvel();
+            const v2 = newLockedPair[1].body.linvel();
+            const isMoving = (v1.x*v1.x + v1.z*v1.z > 0.5) || (v2.x*v2.x + v2.z*v2.z > 0.5);
+            const distSq = newLockedPair[0].mesh.position.distanceToSquared(newLockedPair[1].mesh.position);
+            if (isMoving && distSq < 25.0) {
+                minDistanceSq = distSq;
+                closestPair = newLockedPair;
+            } else {
+                newLockedPair = null;
+            }
+        }
+
+        if (!newLockedPair) {
+            for (let i = 0; i < objects.length; i++) {
+                if (!objects[i].active) continue;
+                const v1 = objects[i].body.linvel();
+                const isMoving1 = (v1.x * v1.x + v1.z * v1.z) > 1.0;
+                for (let j = i + 1; j < objects.length; j++) {
+                    if (!objects[j].active) continue;
+                    const v2 = objects[j].body.linvel();
+                    const isMoving2 = (v2.x * v2.x + v2.z * v2.z) > 1.0;
+                    if (!isMoving1 && !isMoving2) continue;
+                    const distSq = objects[i].mesh.position.distanceToSquared(objects[j].mesh.position);
+                    if (distSq < minDistanceSq) {
+                        minDistanceSq = distSq;
+                        closestPair = [objects[i], objects[j]];
+                    }
+                }
+            }
+            if (minDistanceSq < 16.0 && closestPair) newLockedPair = closestPair;
+        }
+
+        // Slow-mo and zoom logic
+        if (minDistanceSq < 16.0 && closestPair) {
+            const dist = Math.sqrt(minDistanceSq);
+            const v1 = closestPair[0].body.linvel();
+            const v2 = closestPair[1].body.linvel();
+            const relativeVel = new THREE.Vector3(v1.x - v2.x, 0, v1.z - v2.z).length();
+            
+            const originalTime = (dist - 0.8) / Math.max(0.1, relativeVel);
+            const desiredTime = 1.2; 
+            let optimalSlowMo = Math.max(0.05, Math.min(1.0, originalTime / desiredTime));
+            let distFactor = Math.max(0.0, Math.min(1.0, (dist - 0.8) / (4.0 - 0.8)));
+
+            targetSlowMo = optimalSlowMo + (1.0 - optimalSlowMo) * distFactor;
+            
+            const midPoint = new THREE.Vector3().addVectors(closestPair[0].mesh.position, closestPair[1].mesh.position).multiplyScalar(0.5);
+            
+            const finalCamPos = new THREE.Vector3(midPoint.x * 0.3, 22, midPoint.z * 0.3 + 15);
+            const startCamPos = new THREE.Vector3(0, 40, 0);
+            const lerpedCamPos = new THREE.Vector3().lerpVectors(finalCamPos, startCamPos, Math.pow(distFactor, 1.2));
+            
+            setCameraTarget(lerpedCamPos, midPoint);
+        } else {
+            newLockedPair = null;
+        }
+    }
+    
+    return { targetSlowMo, newLockedPair };
+}
+
+/** 매 프레임 카메라 업데이트 */
 export function updateCamera(deltaTime) {
+    console.log(currentMode);
     switch (currentMode) {
         case CAMERA_MODES.DEFAULT:
-            // 기본 뷰 위치(0, 40, 0) 및 원점(0, 0, 0) 응시로 부드럽게 복귀
-            targetCamPos.set(0, 40, 0);
+            targetCamPos.set(0, 40, 10);
             targetCamLook.set(0, 0, 0);
-            
-            currentCamPos.lerp(targetCamPos, 0.05);
-            currentCamLook.lerp(targetCamLook, 0.05);
+
+            currentCamPos.lerp(targetCamPos, 0.1);
+            currentCamLook.lerp(targetCamLook, 0.1);
             
             camera.position.copy(currentCamPos);
             camera.lookAt(currentCamLook);
             break;
-
         case CAMERA_MODES.FOLLOW:
-            // 설정된 targetCamPos와 targetCamLook을 향해 부드럽게 보간 이동
-            currentCamPos.lerp(targetCamPos, 0.05);
-            currentCamLook.lerp(targetCamLook, 0.05);
+            currentCamPos.lerp(targetCamPos, 0.005);
+            currentCamLook.lerp(targetCamLook, 0.005);
             
             camera.position.copy(currentCamPos);
             camera.lookAt(currentCamLook);
@@ -161,14 +204,12 @@ export function updateCamera(deltaTime) {
         case CAMERA_MODES.ORBITCONTROL:
             if (orbitControls) {
                 orbitControls.update();
-                // 사용자가 조작한 위치를 내부 변수에 동기화하여 모드 전환 시 튀는 현상 방지
                 currentCamPos.copy(camera.position);
                 targetCamPos.copy(camera.position);
             }
             break;
 
         case CAMERA_MODES.SKILL:
-            // 외부(스킬)에서 정의한 특수 카메라 로직 실행
             if (customUpdater) {
                 customUpdater(camera, deltaTime);
             }

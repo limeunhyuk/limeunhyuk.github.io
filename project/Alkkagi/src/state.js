@@ -24,21 +24,9 @@ export const state = {
     projectileSkill: "NONE",
     teleportSelectedStone: null,
 
-    // Rhythm Game
-    // TODO: skillManager로 이전
-    rhythmActive: false,
-    ringSize: 250,
-    rhythmSpeed: 1.0,
-
     // Interaction
     draggedStone: null,
     
-    // Camera
-    currentCamPos: { x: 0, y: 40, z: 0 },
-    currentCamLook: { x: 0, y: 0, z: 0 },
-    targetCamPos: { x: 0, y: 40, z: 0 },
-    targetCamLook: { x: 0, y: 0, z: 0 },
-
     // Tracking for Lock-On
     lockedPair: null
 };

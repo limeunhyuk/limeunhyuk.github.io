@@ -7,7 +7,8 @@
  */
 import * as THREE from 'three';
 import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
-import { camera, scene, physicsWorld } from './engine.js';
+import { scene, physicsWorld } from './engine.js';
+import { getCamera } from './cameraManager.js';
 import { state } from './state.js';
 import { objects } from './stone.js';
 import { updateStatusUI, resetSkillUI } from './ui.js';
@@ -46,17 +47,21 @@ export function initInteraction() {
 
 function onPointerDown(e) {
     if (state.gameState !== "AIMING") return;
+    if (e.button !== 0) return; // 좌클릭(0)일 때만 진행
     
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, getCamera());
     const intersects = raycaster.intersectObjects(objects.filter(o => o.active).map(o => o.mesh));
     
     const pointerPos = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, pointerPos);
     
-    // Delegate to SkillManager
+    // Delegate to SkillManager (New granular hooks)
+    if (skillManager.handlePointerDown(intersects, pointerPos)) return;
+    
+    // Backward compatibility
     if (skillManager.handleInteraction(intersects, pointerPos, selectionRing)) return;
 
     if (intersects.length > 0) {
@@ -75,17 +80,21 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, getCamera());
+    const intersects = raycaster.intersectObjects(objects.filter(o => o.active).map(o => o.mesh));
+    const intersectPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, intersectPoint);
+
+    // Delegate to SkillManager
+    if (skillManager.handlePointerMove(intersects, intersectPoint)) return;
+
     if (!state.draggedStone || state.gameState !== "AIMING") return;
     
     // Prevent dragging if current skill is active (e.g. Teleport)
     if (state.currentSkill === "TELEPORT") return;
-    
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    
-    raycaster.setFromCamera(mouse, camera);
-    const intersectPoint = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, intersectPoint);
     
     const startVec = new THREE.Vector3(state.draggedStone.mesh.position.x, 0.2, state.draggedStone.mesh.position.z);
     const dragVec = new THREE.Vector3().subVectors(startVec, intersectPoint);
@@ -132,7 +141,7 @@ function onPointerUp(e) {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, getCamera());
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, intersectPoint);
     
@@ -159,7 +168,6 @@ function onPointerUp(e) {
         updateStatusUI();
         
         document.getElementById('skill-selector').style.display = 'none';
-        state.currentSkill = "NONE";
         state.teleportSelectedStone = null;
         resetSkillUI();
     }

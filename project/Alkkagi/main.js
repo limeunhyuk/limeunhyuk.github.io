@@ -7,31 +7,36 @@
  */
 import { state } from './src/state.js';
 import { loadAssets } from './src/assets.js';
-import { initEngine, camera } from './src/engine.js';
+import { initEngine, scene, renderer } from './src/engine.js';
 import { createEnvironment } from './src/environment.js';
 import { createStones, clearStones } from './src/stone.js';
 import { initUI, updateStatusUI, resetSkillUI } from './src/ui.js';
-import { initInteraction, selectionRing } from './src/interaction.js';
+import { initInteraction } from './src/interaction.js';
 import { skillManager } from './src/SkillManager.js';
 import { animate } from './src/gameManager.js';
+import { initCameraManager, setCameraMode, snapCameraTo, CAMERA_MODES } from './src/cameraManager.js';
+import * as THREE from 'three';
 
 async function init() {
     // 1. Initialize Engine (Rapier & Three.js)
     await initEngine();
 
-    // 2. Preload Assets (Textures & GLB Models)
+    // 2. Initialize Camera Manager
+    initCameraManager(scene, renderer.domElement);
+
+    // 3. Preload Assets (Textures & GLB Models)
     await loadAssets();
 
-    // 3. Register Skills
+    // 4. Register Skills
     skillManager.initSkills();
 
-    // 4. Create Environment
+    // 5. Create Environment
     createEnvironment();
 
-    // 5. Initialize Interaction (Pointer Events)
+    // 6. Initialize Interaction (Pointer Events)
     initInteraction();
 
-    // 6. Initialize UI
+    // 7. Initialize UI
     initUI({
         onStart: startGame,
         onRestart: () => {
@@ -65,13 +70,6 @@ async function init() {
         }
     });
 
-    // 7. Global Key Listeners (Rhythm Game)
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && state.rhythmActive) {
-            import('./src/skills/RhythmSkill.js').then(m => m.RhythmSkill.checkRhythmTiming());
-        }
-    });
-
     // 8. Start Animation Loop
     animate();
 }
@@ -101,10 +99,8 @@ function startGame() {
     if (skillSelector) skillSelector.style.display = 'block';
     resetSkillUI();
     
-    state.currentCamPos = { x: 0, y: 40, z: 0 };
-    state.currentCamLook = { x: 0, y: 0, z: 0 };
-    camera.position.set(0, 40, 0);
-    camera.lookAt(0, 0, 0);
+    snapCameraTo(new THREE.Vector3(0, 40, 0), new THREE.Vector3(0, 0, 0));
+    setCameraMode(CAMERA_MODES.ORBITCONTROL);
 }
 
 init().catch(e => console.error(e));
