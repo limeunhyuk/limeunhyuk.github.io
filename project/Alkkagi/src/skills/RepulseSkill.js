@@ -22,8 +22,8 @@ export class RepulseSkill extends BaseSkill {
 
         for (let i = 0; i < 3; i++) createHitEffect(midPoint); 
 
-        const radius = 5.0;
-        const repulseForce = 35.0;
+        const radius = 3.0;
+        const repulseForce = 3.5;
         
         objects.forEach(obj => {
             if (obj.active && obj.color !== attackerStone.color) {

@@ -25,6 +25,7 @@ export const state = {
     teleportSelectedStone: null,
 
     // Rhythm Game
+    // TODO: skillManager로 이전
     rhythmActive: false,
     ringSize: 250,
     rhythmSpeed: 1.0,

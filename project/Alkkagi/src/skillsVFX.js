@@ -4,6 +4,9 @@
  * Functions:
  * - createHitEffect(position): Spawns particle bursts and light flashes.
  * - updateParticles(): Animates and disposes of active particles.
+ * 
+ * gameManager don't need to consider particles after creation
+ * 
  */
 import * as THREE from 'three';
 import TWEEN from 'three/addons/libs/tween.module.js';

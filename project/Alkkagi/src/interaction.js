@@ -93,7 +93,7 @@ function onPointerMove(e) {
     const maxDrag = 3.5;
     if (dragVec.length() > maxDrag) dragVec.setLength(maxDrag);
     
-    const powerMultiplier = 1.5;
+    const powerMultiplier = 1.0;
     const power = dragVec.length() * powerMultiplier;
     
     const lineEnd = startVec.clone().sub(dragVec);
@@ -142,7 +142,7 @@ function onPointerUp(e) {
     const maxDrag = 3.5;
     if (dragVec.length() > maxDrag) dragVec.setLength(maxDrag);
 
-    const powerMultiplier = 1.5; 
+    const powerMultiplier = 1.0; 
     const power = dragVec.length() * powerMultiplier;
     
     if (power > 0.5) {
