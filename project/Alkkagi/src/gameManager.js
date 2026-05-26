@@ -9,7 +9,7 @@ import { state } from './state.js';
 import { objects, checkFallOffBoard } from './stone.js';
 import { skillManager } from './SkillManager.js';
 import { updateParticles } from './skillsVFX.js';
-import { showGameOver } from './ui.js';
+import { showGameOver, toggleGameUI } from './ui.js';
 import { updateCamera as updateCameraLogic, setCameraMode, CAMERA_MODES, getCamera, updateActionCamera } from './cameraManager.js';
 
 let lastTime = 0;
@@ -102,9 +102,8 @@ function checkMovementStopped() {
         setTimeout(() => {
             if (state.gameState === "RETURN_TO_AIM") {
                 state.gameState = "AIMING";
-                setCameraMode(CAMERA_MODES.ORBITCONTROL);
-                const selector = document.getElementById('skill-selector');
-                if (selector) selector.style.display = 'block';
+                setCameraMode(CAMERA_MODES.DEFAULT);
+                toggleGameUI(true);
             }
         }, 800);
     }

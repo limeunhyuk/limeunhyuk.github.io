@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { setBrightness } from './engine.js';
 
 // Private Variables
 let camera = null;           // 메인 카메라 객체
@@ -18,6 +19,15 @@ let currentCamPos = new THREE.Vector3(0, 40, 0);   // 현재 위치 (보간용)
 let targetCamPos = new THREE.Vector3(0, 40, 0);    // 목표 위치
 let currentCamLook = new THREE.Vector3(0, 0, 0);   // 현재 시선 (보간용)
 let targetCamLook = new THREE.Vector3(0, 0, 0);    // 목표 시선
+
+// Keyboard state for DEFAULT mode
+const keys = { w: false, a: false, s: false, d: false, q: false, e: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+// Camera spherical state for DEFAULT mode
+let camTarget = new THREE.Vector3(0, 0, 0);
+let camTheta = 0; // horizontal angle
+let camPhi = 0.245; // vertical angle from top (approx atan(10/40))
+let camRadius = 32.0; // zoomed in so board fills screen vertically
 
 
 // Exported APIs
@@ -65,6 +75,43 @@ export function initCameraManager(scene, domElement) {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
         }
+    });
+
+    window.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (key === 'r' || key === 'R') {
+            camTarget.set(0, 0, 0);
+            camTheta = 0;
+            camPhi = 0.245;
+            camRadius = 32.0;
+        }
+        if (key >= '1' && key <= '5') {
+            setBrightness(parseInt(key));
+        }
+        if (key === 'w' || key === 'W') keys.w = true;
+        if (key === 's' || key === 'S') keys.s = true;
+        if (key === 'a' || key === 'A') keys.a = true;
+        if (key === 'd' || key === 'D') keys.d = true;
+        if (key === 'q' || key === 'Q') keys.q = true;
+        if (key === 'e' || key === 'E') keys.e = true;
+        if (key === 'ArrowUp') keys.ArrowUp = true;
+        if (key === 'ArrowDown') keys.ArrowDown = true;
+        if (key === 'ArrowLeft') keys.ArrowLeft = true;
+        if (key === 'ArrowRight') keys.ArrowRight = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        const key = e.key;
+        if (key === 'w' || key === 'W') keys.w = false;
+        if (key === 's' || key === 'S') keys.s = false;
+        if (key === 'a' || key === 'A') keys.a = false;
+        if (key === 'd' || key === 'D') keys.d = false;
+        if (key === 'q' || key === 'Q') keys.q = false;
+        if (key === 'e' || key === 'E') keys.e = false;
+        if (key === 'ArrowUp') keys.ArrowUp = false;
+        if (key === 'ArrowDown') keys.ArrowDown = false;
+        if (key === 'ArrowLeft') keys.ArrowLeft = false;
+        if (key === 'ArrowRight') keys.ArrowRight = false;
     });
 
     setCameraMode(CAMERA_MODES.DEFAULT);
@@ -187,13 +234,47 @@ export function updateActionCamera(objects, currentLockedPair, firstCollisionOcc
     return { targetSlowMo, newLockedPair };
 }
 
-/** update camera's position/direction every frame */
 export function updateCamera(deltaTime) {
-    console.log(currentMode);
     switch (currentMode) {
         case CAMERA_MODES.DEFAULT:
-            targetCamPos.set(0, 40, 10);
-            targetCamLook.set(0, 0, 0);
+            const dt = Math.max(0.001, deltaTime);
+            const rotSpeed = 1.0 * dt; // 줄어든 회전 속도
+            const moveSpeed = 15.0 * dt; // 줄어든 이동 속도
+            const zoomSpeed = 20.0 * dt;
+
+            // Rotation
+            if (keys.w) camPhi -= rotSpeed;
+            if (keys.s) camPhi += rotSpeed;
+            if (keys.a) camTheta -= rotSpeed;
+            if (keys.d) camTheta += rotSpeed;
+            
+            // Zoom
+            if (keys.q) camRadius -= zoomSpeed;
+            if (keys.e) camRadius += zoomSpeed;
+            camRadius = Math.max(10.0, Math.min(100.0, camRadius));
+
+            // Constrain phi (0 = directly above, 70 degrees = Math.PI * 70 / 180)
+            const MAX_PHI = (70 * Math.PI) / 180;
+            camPhi = Math.max(0.1, Math.min(MAX_PHI, camPhi));
+
+            // Movement relative to camera orientation
+            const forward = new THREE.Vector3(-Math.sin(camTheta), 0, -Math.cos(camTheta));
+            const right = new THREE.Vector3(-Math.cos(camTheta), 0, Math.sin(camTheta));
+
+            if (keys.ArrowUp) camTarget.addScaledVector(forward, moveSpeed);
+            if (keys.ArrowDown) camTarget.addScaledVector(forward, -moveSpeed);
+            if (keys.ArrowLeft) camTarget.addScaledVector(right, moveSpeed); // 좌우 반전
+            if (keys.ArrowRight) camTarget.addScaledVector(right, -moveSpeed); // 좌우 반전
+
+            // Constrain target movement bounds (range: 10)
+            camTarget.x = Math.max(-10, Math.min(10, camTarget.x));
+            camTarget.z = Math.max(-10, Math.min(10, camTarget.z));
+
+            // Spherical to Cartesian
+            targetCamPos.x = camTarget.x + camRadius * Math.sin(camPhi) * Math.sin(camTheta);
+            targetCamPos.y = camTarget.y + camRadius * Math.cos(camPhi);
+            targetCamPos.z = camTarget.z + camRadius * Math.sin(camPhi) * Math.cos(camTheta);
+            targetCamLook.copy(camTarget);
 
             currentCamPos.lerp(targetCamPos, 0.1);
             currentCamLook.lerp(targetCamLook, 0.1);

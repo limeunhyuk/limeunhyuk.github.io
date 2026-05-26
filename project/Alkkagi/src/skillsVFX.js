@@ -47,6 +47,40 @@ export function createHitEffect(position) {
         .start();
 }
 
+export function createFallEffect(position) {
+    const particleCount = 30;
+    const geometry = new THREE.BoxGeometry(0.06, 0.06, 0.06);
+    const material = new THREE.MeshBasicMaterial({ color: 0x87ceeb }); // 하늘색
+
+    for (let i = 0; i < particleCount; i++) {
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(position);
+        
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 2 - 1);
+        const speed = 0.02 + Math.random() * 0.03;
+        
+        const velocity = new THREE.Vector3(
+            Math.sin(phi) * Math.cos(theta),
+            Math.sin(phi) * Math.sin(theta),
+            Math.cos(phi)
+        ).multiplyScalar(speed);
+
+        scene.add(mesh);
+        particles.push({ mesh, velocity, life: 1.0 });
+    }
+    
+    const flash = new THREE.PointLight(0x00ffff, 4, 8);
+    flash.position.copy(position);
+    scene.add(flash);
+    
+    new TWEEN.Tween(flash)
+        .to({ intensity: 0 }, 800)
+        .onComplete(() => scene.remove(flash))
+        .start();
+}
+
+
 export function updateParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];

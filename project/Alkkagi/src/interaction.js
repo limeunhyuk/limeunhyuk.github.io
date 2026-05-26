@@ -11,14 +11,14 @@ import { scene, physicsWorld } from './engine.js';
 import { getCamera } from './cameraManager.js';
 import { state } from './state.js';
 import { objects } from './stone.js';
-import { updateStatusUI, resetSkillUI } from './ui.js';
+import { updateStatusUI, resetSkillUI, toggleGameUI } from './ui.js';
 import { skillManager } from './SkillManager.js';
 
 export const raycaster = new THREE.Raycaster();
 export const mouse = new THREE.Vector2();
 export const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-export let dragLine, trajectoryLine, selectionRing;
+export let dragLine, trajectoryLine, selectionRing, hoverSpotLight;
 
 // Sets up pointer event listeners and visual drag aids.
 export function initInteraction() {
@@ -44,6 +44,16 @@ export function initInteraction() {
     trajectoryLine = new THREE.Line(trajGeo, trajMat);
     trajectoryLine.visible = false;
     scene.add(trajectoryLine);
+
+    hoverSpotLight = new THREE.SpotLight(0xffffff, 10);
+    hoverSpotLight.angle = Math.PI / 8;
+    hoverSpotLight.penumbra = 0.5;
+    hoverSpotLight.decay = 2;
+    hoverSpotLight.distance = 10;
+    hoverSpotLight.castShadow = true;
+    hoverSpotLight.visible = false;
+    scene.add(hoverSpotLight);
+    scene.add(hoverSpotLight.target);
 }
 
 function onPointerDown(e) {
@@ -75,8 +85,8 @@ function onPointerDown(e) {
         
         selectionRing.position.set(state.draggedStone.mesh.position.x, 0.05, state.draggedStone.mesh.position.z);
         selectionRing.visible = true;
-        dragLine.visible = true;
-        trajectoryLine.visible = true;
+        dragLine.visible = false;
+        trajectoryLine.visible = false;
     }
 }
 
@@ -86,6 +96,28 @@ function onPointerMove(e) {
     
     raycaster.setFromCamera(mouse, getCamera());
     const intersects = raycaster.intersectObjects(objects.filter(o => o.active).map(o => o.mesh));
+    
+    if (state.gameState === "AIMING" && !state.draggedStone) {
+        if (intersects.length > 0) {
+            const hitMesh = intersects[0].object;
+            const hoveredStone = objects.find(o => o.mesh === hitMesh);
+            if (hoveredStone && hoveredStone.color === state.currentTurn) {
+                hoverSpotLight.position.set(hitMesh.position.x, 3, hitMesh.position.z);
+                hoverSpotLight.target.position.copy(hitMesh.position);
+                hoverSpotLight.visible = true;
+                
+                // Color based on turn
+                hoverSpotLight.color.setHex(state.currentTurn === 'black' ? 0xffaaaa : 0xaaffaa);
+            } else {
+                hoverSpotLight.visible = false;
+            }
+        } else {
+            hoverSpotLight.visible = false;
+        }
+    } else {
+        hoverSpotLight.visible = false;
+    }
+
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, intersectPoint);
 
@@ -108,6 +140,7 @@ function onPointerMove(e) {
     
     const lineEnd = startVec.clone().sub(dragVec);
     dragLine.geometry.setFromPoints([startVec, lineEnd]);
+    dragLine.visible = true;
     
     if (dragVec.length() > 0.1) {
         const dir = dragVec.clone().normalize();
@@ -168,7 +201,7 @@ function onPointerUp(e) {
         state.currentTurn = state.currentTurn === 'black' ? 'white' : 'black';
         updateStatusUI();
         
-        document.getElementById('skill-selector').style.display = 'none';
+        toggleGameUI(false);
         state.teleportSelectedStone = null;
         resetSkillUI();
     }

@@ -94,3 +94,15 @@ export function showGameOver(winner) {
 export function checkRhythmTiming() {
     import('./skills/RhythmSkill.js').then(m => m.RhythmSkill.checkRhythmTiming());
 }
+
+export function toggleGameUI(visible) {
+    const displayStyle = visible ? 'block' : 'none';
+    if (uiContainer) uiContainer.style.display = displayStyle;
+    if (statusContainer) statusContainer.style.display = displayStyle;
+    
+    const skillSelector = document.getElementById('skill-selector');
+    if (skillSelector) skillSelector.style.display = displayStyle;
+    
+    const cameraControls = document.getElementById('camera-controls-guide');
+    if (cameraControls) cameraControls.style.display = displayStyle;
+}

@@ -12,6 +12,7 @@ import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
 
 export let scene, renderer;
 export let physicsWorld, eventQueue;
+export let ambientLight, dirLight;
 
 /** initialize Three.js & Rapier
  *  Three.js:
@@ -31,10 +32,10 @@ export async function initEngine() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(10, 20, 10);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
@@ -56,4 +57,11 @@ export function updateMeshPositions(objects) {
             obj.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
         }
     });
+}
+
+export function setBrightness(level) {
+    if (ambientLight && dirLight) {
+        ambientLight.intensity = 0.6 * (level / 3);
+        dirLight.intensity = 0.8 * (level / 3);
+    }
 }

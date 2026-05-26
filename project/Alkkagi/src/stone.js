@@ -12,6 +12,7 @@ import { scene, physicsWorld } from './engine.js';
 import { assets } from './assets.js';
 import { state } from './state.js';
 import { updateStatusUI } from './ui.js';
+import { createFallEffect } from './skillsVFX.js';
 
 export const objects = [];
 
@@ -102,7 +103,16 @@ export function checkFallOffBoard(onGameOver) {
     objects.forEach(obj => {
         if (obj.active) {
             const pos = obj.body.translation();
-            if (pos.y < -1.0) {
+            // 바둑판(크기 15)을 벗어났는지 확인 (가장자리 7.5에서 시각적으로 적절히 벗어난 10.0 지점)
+            const isOffHorizontally = Math.abs(pos.x) > 10.0 || Math.abs(pos.z) > 10.0;
+            const isOffVertically = pos.y < -1.0;
+
+            if (isOffHorizontally || isOffVertically) {
+                // 바닥 밑에서 이펙트가 터져서 가려지지 않도록 높이 보정
+                const effectY = Math.max(-0.4, pos.y);
+                const fallPos = new THREE.Vector3(pos.x, effectY, pos.z);
+                createFallEffect(fallPos);
+                
                 obj.active = false;
                 obj.mesh.visible = false;
                 
@@ -124,3 +134,5 @@ export function checkFallOffBoard(onGameOver) {
         onGameOver("draw");
     }
 }
+
+

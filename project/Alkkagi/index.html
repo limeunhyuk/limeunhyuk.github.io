@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>초차원 알까기 (Hyperdimensional Alkkagi)</title>
+    <title>초차원 알까기 (3D Alkkagi)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Three.js Import Map -->
     <script type="importmap">
@@ -20,11 +21,6 @@
     <!-- Start Screen -->
     <div id="start-screen" class="overlay-screen">
         <div class="start-layout">
-            <div class="side-panel">
-                <h2>조작 방법</h2>
-                <img src="assets/textures/tutorial_flick.png" alt="조작 방법">
-                <p>자신의 차례인 돌을 드래그해 놓으면<br>반대 방향으로 날아갑니다.</p>
-            </div>
             <div class="center-panel">
                 <h1>초차원 알까기</h1>
                 <div class="input-group">
@@ -36,11 +32,6 @@
                     <input type="number" id="input-white" value="10" min="1" max="25">
                 </div>
                 <button id="btn-start">게임 시작</button>
-            </div>
-            <div class="side-panel">
-                <h2>초차원 스킬</h2>
-                <img src="assets/textures/tutorial_rhythm.png" alt="스킬 발동">
-                <p>돌이 처음 부딪힐 때 생기는 원에 맞춰<br><strong>스페이스바</strong>를 누르세요!</p>
             </div>
         </div>
     </div>
@@ -78,6 +69,13 @@
             <div>흑 돌: <span id="black-score">3 / 3</span></div>
             <div>백 돌: <span id="white-score">3 / 3</span></div>
         </div>
+    </div>
+    <div id="camera-controls-guide" class="camera-controls-guide" style="display: none;">
+        <p><strong>카메라 조작</strong></p>
+        <p>회전: W, A, S, D</p>
+        <p>이동: 방향키(↑, ↓, ←, →)</p>
+        <p>초기화: R / 확대: Q, 축소: E</p>
+        <p>밝기 조절: 1 ~ 5</p>
     </div>
 </body>
 </html>

@@ -7,7 +7,7 @@ import { loadAssets } from './src/assets.js';
 import { initEngine, scene, renderer } from './src/engine.js';
 import { createEnvironment } from './src/environment.js';
 import { createStones, clearStones } from './src/stone.js';
-import { initUI, updateStatusUI, resetSkillUI } from './src/ui.js';
+import { initUI, updateStatusUI, resetSkillUI, toggleGameUI } from './src/ui.js';
 import { initInteraction } from './src/interaction.js';
 import { skillManager } from './src/SkillManager.js';
 import { animate } from './src/gameManager.js';
@@ -36,15 +36,10 @@ async function init() {
         onToStart: () => {
             const gameOverScreen = document.getElementById('game-over-screen');
             const startScreen = document.getElementById('start-screen');
-            const uiContainer = document.getElementById('ui-container');
-            const statusContainer = document.getElementById('status-container');
-            const skillSelector = document.getElementById('skill-selector');
 
             if (gameOverScreen) gameOverScreen.style.display = 'none';
             if (startScreen) startScreen.style.display = 'flex';
-            if (uiContainer) uiContainer.style.display = 'none';
-            if (statusContainer) statusContainer.style.display = 'none';
-            if (skillSelector) skillSelector.style.display = 'none';
+            toggleGameUI(false);
             
             clearStones();
             state.gameState = "MENU";
@@ -68,13 +63,9 @@ function startGame() {
     const wCount = parseInt(inputWhite?.value) || 10;
     
     const startScreen = document.getElementById('start-screen');
-    const uiContainer = document.getElementById('ui-container');
-    const statusContainer = document.getElementById('status-container');
-    const skillSelector = document.getElementById('skill-selector');
 
     if (startScreen) startScreen.style.display = 'none';
-    if (uiContainer) uiContainer.style.display = 'block';
-    if (statusContainer) statusContainer.style.display = 'block';
+    toggleGameUI(true);
     
     createStones(bCount, wCount);
     state.currentTurn = "black";
@@ -83,11 +74,10 @@ function startGame() {
     state.gameState = "AIMING";
     state.firstCollisionOccurred = false;
     
-    if (skillSelector) skillSelector.style.display = 'block';
     resetSkillUI();
     
     snapCameraTo(new THREE.Vector3(0, 40, 0), new THREE.Vector3(0, 0, 0));
-    setCameraMode(CAMERA_MODES.ORBITCONTROL);
+    setCameraMode(CAMERA_MODES.DEFAULT);
 }
 
 init().catch(e => console.error(e));
