@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초차원 알까기 (3D Alkkagi)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="main.js" defer></script>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay-screen">
+        <div class="start-layout">
+            <div class="center-panel">
+                <h1>초차원 알까기</h1>
+                <div class="input-group">
+                    <label>흑 돌 개수:</label>
+                    <input type="number" id="input-black" value="10" min="1" max="25">
+                </div>
+                <div class="input-group">
+                    <label>백 돌 개수:</label>
+                    <input type="number" id="input-white" value="10" min="1" max="25">
+                </div>
+                <button id="btn-start">다음 →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formation Select Screen -->
+    <div id="formation-screen" class="overlay-screen" style="display: none;">
+        <div class="formation-layout">
+            <h2 class="formation-title">⚔️ 포진 선택</h2>
+            <p class="formation-subtitle">원하는 배치를 선택하세요</p>
+
+            <!-- 포진 카드 그리드 (JS로 동적 생성) -->
+            <div id="formation-grid" class="formation-grid"></div>
+
+            <!-- 커스텀 포진 에디터 -->
+            <div id="custom-editor" class="custom-editor" style="display: none;">
+                <div class="custom-editor-header">
+                    <div id="custom-editor-label" class="custom-editor-label">⚫ 흑팀 배치 중</div>
+                    <button id="btn-clear-custom" class="custom-clear-btn">🗑️ 초기화</button>
+                </div>
+                <canvas id="custom-canvas" width="360" height="360"></canvas>
+                <div id="custom-count-info" class="custom-count-info">
+                    클릭: 배치 · 우클릭: 제거
+                </div>
+            </div>
+
+            <button id="btn-confirm-formation" class="btn-confirm-formation">게임 시작! ▶</button>
+            <button id="btn-formation-back" class="btn-formation-back">← 뒤로</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="overlay-screen" style="display: none;">
+        <h1 id="winner-text">흑 승리!</h1>
+        <button id="btn-restart">다시하기</button>
+        <button id="btn-to-start" style="margin-top: 10px; background: #555;">시작 화면</button>
+    </div>
+
+    <div id="ui-container" style="display: none;">
+        <h1>초차원 알까기 ☄️</h1>
+        <p>드래그하여 돌을 튕기세요!</p>
+    </div>
+    <div id="skill-selector" style="display: none;">
+        <p>이번 턴 스킬 선택</p>
+        <div id="skill-options" class="skill-options">
+            <!-- Skills will be generated here dynamically -->
+        </div>
+    </div>
+    <div id="rhythm-container" style="display: none;">
+        <div class="guide-ring good-outer"></div>
+        <div class="guide-ring perfect-outer"></div>
+        <div class="guide-ring perfect-inner"></div>
+        <div class="guide-ring good-inner"></div>
+        <div class="target-ring"></div>
+        <div class="shrinking-ring" id="shrinking-ring"></div>
+        <div class="rhythm-text" id="rhythm-text">준비...</div>
+    </div>
+    
+    <div id="status-container" style="display: none;">
+        <div class="turn-indicator" id="turn-indicator">현재 차례: 흑(Black)</div>
+        <div class="score-board">
+            <div>흑 돌: <span id="black-score">3 / 3</span></div>
+            <div>백 돌: <span id="white-score">3 / 3</span></div>
+        </div>
+    </div>
+    <div id="camera-controls-guide" class="camera-controls-guide" style="display: none;">
+        <p><strong>카메라 조작</strong></p>
+        <p>회전: W, A, S, D</p>
+        <p>이동: 방향키(↑, ↓, ←, →)</p>
+        <p>초기화: R / 확대: Q, 축소: E</p>
+        <p>밝기 조절: 1 ~ 5</p>
+    </div>
+</body>
+</html>
