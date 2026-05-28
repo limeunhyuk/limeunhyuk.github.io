@@ -136,14 +136,25 @@ export function updateSkillAvailabilityUI() {
 // ── Skill Selector Turn Theme ────────────────────────────────────
 
 /**
- * #skill-selector 의 테마 클래스를 현재 턴(흑/백)에 맞게 갱신한다.
- * updateStatusUI(), resetSkillUI() 에서 호출.
+ * 모든 UI 컨테이너의 테마 클래스를 현재 턴(흑/백)에 맞게 갱신한다.
+ * updateStatusUI(), resetSkillUI(), toggleGameUI() 에서 호출.
  */
-function updateSkillSelectorTheme() {
-    const sel = document.getElementById('skill-selector');
-    if (!sel) return;
-    sel.classList.toggle('turn-black', state.currentTurn === 'black');
-    sel.classList.toggle('turn-white', state.currentTurn === 'white');
+function updateUITheme() {
+    const isBlack = state.currentTurn === 'black';
+    const isWhite = state.currentTurn === 'white';
+
+    const els = [
+        document.getElementById('skill-selector'),
+        document.getElementById('ui-container'),
+        document.getElementById('status-container'),
+        document.getElementById('camera-controls-guide')
+    ];
+
+    els.forEach(el => {
+        if (!el) return;
+        el.classList.toggle('turn-black', isBlack);
+        el.classList.toggle('turn-white', isWhite);
+    });
 }
 
 // ── Status & Score ────────────────────────────────────────────────
@@ -158,7 +169,7 @@ export function updateStatusUI() {
     whiteScore.innerText = `${state.currentWhite} / ${state.totalWhite}`;
 
     // 스킬 선택창 색상 테마 + 사용 가능 여부 갱신
-    updateSkillSelectorTheme();
+    updateUITheme();
     updateSkillAvailabilityUI();
 }
 
@@ -168,7 +179,7 @@ export function resetSkillUI() {
     if (def) def.classList.add('active');
 
     // 테마 + 사용 가능 여부 갱신 (턴이 바뀐 후 호출)
-    updateSkillSelectorTheme();
+    updateUITheme();
     updateSkillAvailabilityUI();
 }
 
@@ -203,7 +214,7 @@ export function toggleGameUI(visible) {
 
     // UI가 표시될 때 테마 + 스킬 가용 여부 갱신
     if (visible) {
-        updateSkillSelectorTheme();
+        updateUITheme();
         updateSkillAvailabilityUI();
     }
 }

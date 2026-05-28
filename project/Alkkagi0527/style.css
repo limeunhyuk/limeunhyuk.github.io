@@ -369,12 +369,15 @@ body {
 /* ── 스킬 선택창 턴 테마 ──────────────────────────────────────────────── */
 
 /* 공통 전환 애니메이션 */
-#skill-selector {
+#skill-selector, #ui-container, #status-container, #camera-controls-guide {
     transition: border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
 }
 
 /* ▌흑(Black) 차례 — 짙은 슬레이트 · 회색 액센트 */
-#skill-selector.turn-black {
+#skill-selector.turn-black,
+#ui-container.turn-black,
+#status-container.turn-black,
+#camera-controls-guide.turn-black {
     border-color: rgba(180, 180, 190, 0.50);
     background: rgba(6, 6, 10, 0.90);
     box-shadow: 0 0 18px rgba(120, 120, 140, 0.30), inset 0 0 10px rgba(0, 0, 0, 0.5);
@@ -414,7 +417,10 @@ body {
 }
 
 /* ▌백(White) 차례 — 밝은 펄 · 흰색 액센트 */
-#skill-selector.turn-white {
+#skill-selector.turn-white,
+#ui-container.turn-white,
+#status-container.turn-white,
+#camera-controls-guide.turn-white {
     border-color: rgba(255, 255, 255, 0.70);
     background: rgba(220, 225, 240, 0.10);
     box-shadow: 0 0 18px rgba(255, 255, 255, 0.35), inset 0 0 10px rgba(255, 255, 255, 0.04);
