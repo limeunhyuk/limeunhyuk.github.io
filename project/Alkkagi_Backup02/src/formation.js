@@ -417,12 +417,12 @@ function _buildTeamTabs() {
     tabRow.innerHTML = `
         <button id="tab-formation-black" class="formation-team-tab active">
             <span class="tab-stone">●</span>
-            흑팀 포진
+            <span class="tab-team-name">흑팀 포진</span>
             <span class="tab-badge black-badge" id="badge-black">기본형</span>
         </button>
         <button id="tab-formation-white" class="formation-team-tab">
             <span class="tab-stone white-s">○</span>
-            백팀 포진
+            <span class="tab-team-name">백팀 포진</span>
             <span class="tab-badge white-badge" id="badge-white">기본형</span>
         </button>
     `;

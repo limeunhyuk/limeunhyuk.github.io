@@ -24,36 +24,30 @@ export function clearStones() {
     objects.length = 0;
 }
 
-/**
- * @param {number} bCount - 흑돌 수
- * @param {number} wCount - 백돌 수
- * @param {Array<{x:number,z:number}>|null} bPositions - 흑돌 좌표 배열 (null이면 기본 배치)
- * @param {Array<{x:number,z:number}>|null} wPositions - 백돌 좌표 배열 (null이면 기본 배치)
- */
-export function createStones(bCount, wCount, bPositions = null, wPositions = null) {
+export function createStones(bCount, wCount) {
     clearStones();
-
+    
     state.totalBlack = bCount;
     state.totalWhite = wCount;
     state.currentBlack = bCount;
     state.currentWhite = wCount;
-
+    
     const positions = [];
-
-    if (bPositions && wPositions) {
-        // 포진 선택으로 전달된 좌표 사용
-        bPositions.forEach(p => positions.push({ x: p.x, z: p.z, color: 'black' }));
-        wPositions.forEach(p => positions.push({ x: p.x, z: p.z, color: 'white' }));
-    } else {
-        // 기본 배치 (fallback)
-        for (let i = 0; i < bCount; i++) {
-            const row = Math.floor(i / 5), col = i % 5;
-            positions.push({ x: -4 + col * 2.0 + (row % 2 ? 1.0 : 0.0), z: 6 - row, color: 'black' });
-        }
-        for (let i = 0; i < wCount; i++) {
-            const row = Math.floor(i / 5), col = i % 5;
-            positions.push({ x: -4 + col * 2.0 + (row % 2 ? 1.0 : 0.0), z: -6 + row, color: 'white' });
-        }
+    
+    // 흑돌 배치
+    for(let i=0; i<bCount; i++) {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        const xOffset = row % 2 === 1 ? 1.0 : 0.0;
+        positions.push({ x: -4 + col * 2.0 + xOffset, z: 6 - row, color: 'black' });
+    }
+    
+    // 백돌 배치
+    for(let i=0; i<wCount; i++) {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        const xOffset = row % 2 === 1 ? 1.0 : 0.0;
+        positions.push({ x: -4 + col * 2.0 + xOffset, z: -6 + row, color: 'white' });
     }
 
     const radius = 0.4;
@@ -91,20 +85,12 @@ export function createStones(bCount, wCount, bPositions = null, wPositions = nul
             
         const body = physicsWorld.createRigidBody(bodyDesc);
         
-        // 충돌 그룹: (memberships << 16) | filter
-        // 흑돌 = 그룹 1 (0x0001), 백돌 = 그룹 2 (0x0002)
-        // 필터 0xFFFF → 모든 그룹과 충돌 (돌끼리, 바닥, 벽 모두)
-        const stoneGroup = pos.color === 'black'
-            ? (0x0001 << 16) | 0xFFFF   // 흑돌: member=1, 모든 것과 충돌
-            : (0x0002 << 16) | 0xFFFF;  // 백돌: member=2, 모든 것과 충돌
-
         const colliderDesc = RAPIER.ColliderDesc.cylinder(height/2, radius)
             .setRestitution(0.9)
             .setFriction(0.3)
             .setDensity(1.0)
-            .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
-            .setCollisionGroups(stoneGroup);
-
+            .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+            
         physicsWorld.createCollider(colliderDesc, body);
 
         objects.push({ mesh, body, type: 'stone', color: pos.color, active: true });

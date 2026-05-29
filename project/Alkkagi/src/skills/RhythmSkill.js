@@ -14,7 +14,7 @@ import TWEEN from 'three/addons/libs/tween.module.js';
  */
 export class RhythmSkill extends BaseSkill {
     constructor() {
-        super("RHYTHM", "리듬 배틀 (Rhythm)");
+        super("RHYTHM", "🎵 리듬 배틀 (Rhythm)");
         this.isActive = false;
         this.ringSize = 250;
         this.rhythmSpeed = 1.0;
@@ -166,17 +166,22 @@ export class RhythmSkill extends BaseSkill {
                         dir.normalize();
 
                         if (rhythmResult === 'perfect') {
+                            // 완벽한 타이밍: 공격 돌 정지 + 수비 돌 강력하게 날아감
                             attackerStone.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+                            defenderStone.body.setLinvel({ x: dir.x * 28.0, y: 0, z: dir.z * 28.0 }, true);
+                        } else if (rhythmResult === 'good') {
+                            // 좋은 타이밍: 수비 돌에 보너스 속도 부여
                             const v = defenderStone.body.linvel();
                             const speed = Math.sqrt(v.x*v.x + v.z*v.z);
-                            if (speed < 15.0) {
-                                defenderStone.body.setLinvel({ x: dir.x * 15.0, y: 0, z: dir.z * 15.0 }, true);
+                            if (speed < 18.0) {
+                                defenderStone.body.setLinvel({ x: dir.x * 18.0, y: 0, z: dir.z * 18.0 }, true);
                             }
                         } else if (rhythmResult === 'miss') {
+                            // 실패: 수비 돌 정지 + 공격 돌 강하게 튕겨나감 (페널티)
                             defenderStone.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
                             const v = attackerStone.body.linvel();
                             const speed = Math.sqrt(v.x*v.x + v.z*v.z);
-                            const reboundSpeed = Math.max(15.0, speed);
+                            const reboundSpeed = Math.max(18.0, speed);
                             attackerStone.body.setLinvel({ x: -dir.x * reboundSpeed, y: 0, z: -dir.z * reboundSpeed }, true);
                         }
 
@@ -209,8 +214,13 @@ export class RhythmSkill extends BaseSkill {
             char.userData.rightArm = char.getObjectByName('RightArm') || { rotation: { x: 0 } };
             return char;
         }
-        else {
-            console.log("assets/models/character.glb not found");
-        }
+
+        // character.glb 로딩 실패 시 캡슐 형태 폴백
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.5, 4, 8), mat);
+        body.position.y = 0.5;
+        group.add(body);
+        group.userData.rightArm = { rotation: { x: 0 } };
+        return group;
     }
 }

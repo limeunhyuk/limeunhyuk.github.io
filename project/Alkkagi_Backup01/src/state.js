@@ -25,12 +25,5 @@ export const state = {
 
     // Interaction
     draggedStone: null,
-    lockedPair: null,            // Closest pair being tracked by Action Camera
-
-    // Skill usage tracking — each skill usable once per player per game
-    usedSkills: { black: new Set(), white: new Set() },
-
-    // 방해 스킬 연속 사용 방지
-    // 상대방이 방해 스킬을 쓴 직후 1턴, 현재 플레이어는 방해 스킬 사용 불가
-    disruptionUsedLastTurn: false
+    lockedPair: null             // Closest pair being tracked by Action Camera
 };

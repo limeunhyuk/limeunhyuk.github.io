@@ -11,7 +11,7 @@ import { scene, physicsWorld } from './engine.js';
 import { getCamera } from './cameraManager.js';
 import { state } from './state.js';
 import { objects } from './stone.js';
-import { updateStatusUI, resetSkillUI, toggleGameUI, updateSkillAvailabilityUI } from './ui.js';
+import { updateStatusUI, resetSkillUI, toggleGameUI } from './ui.js';
 import { skillManager } from './SkillManager.js';
 
 export const raycaster = new THREE.Raycaster();
@@ -191,23 +191,19 @@ function onPointerUp(e) {
     if (power > 0.5) {
         state.projectileSkill = state.currentSkill;
 
-        // 발사 시점 기준(턴 전환 전)으로 스킬 소모 기록
-        skillManager.markSkillUsed(state.currentTurn, state.currentSkill);
-
         dragVec.normalize().multiplyScalar(power);
         state.draggedStone.body.applyImpulse({ x: dragVec.x, y: 0, z: dragVec.z }, true);
-
+        
         state.gameState = "MOVING";
         state.firstCollisionOccurred = false;
         state.currentSlowMoFactor = 1.0;
-
+        
         state.currentTurn = state.currentTurn === 'black' ? 'white' : 'black';
         updateStatusUI();
         
         toggleGameUI(false);
         state.teleportSelectedStone = null;
         resetSkillUI();
-        updateSkillAvailabilityUI();
     }
     
     selectionRing.visible = false;

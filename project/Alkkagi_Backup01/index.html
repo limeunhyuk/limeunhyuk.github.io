@@ -31,34 +31,8 @@
                     <label>백 돌 개수:</label>
                     <input type="number" id="input-white" value="10" min="1" max="25">
                 </div>
-                <button id="btn-start">다음 →</button>
+                <button id="btn-start">게임 시작</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Formation Select Screen -->
-    <div id="formation-screen" class="overlay-screen" style="display: none;">
-        <div class="formation-layout">
-            <h2 class="formation-title">⚔️ 포진 선택</h2>
-            <p class="formation-subtitle">원하는 배치를 선택하세요</p>
-
-            <!-- 포진 카드 그리드 (JS로 동적 생성) -->
-            <div id="formation-grid" class="formation-grid"></div>
-
-            <!-- 커스텀 포진 에디터 -->
-            <div id="custom-editor" class="custom-editor" style="display: none;">
-                <div class="custom-editor-header">
-                    <div id="custom-editor-label" class="custom-editor-label">⚫ 흑팀 배치 중</div>
-                    <button id="btn-clear-custom" class="custom-clear-btn">🗑️ 초기화</button>
-                </div>
-                <canvas id="custom-canvas" width="360" height="360"></canvas>
-                <div id="custom-count-info" class="custom-count-info">
-                    클릭: 배치 · 우클릭: 제거
-                </div>
-            </div>
-
-            <button id="btn-confirm-formation" class="btn-confirm-formation">게임 시작! ▶</button>
-            <button id="btn-formation-back" class="btn-formation-back">← 뒤로</button>
         </div>
     </div>
 

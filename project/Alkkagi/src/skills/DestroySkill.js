@@ -7,7 +7,7 @@ import { createHitEffect } from '../skillsVFX.js';
  */
 export class DestroySkill extends BaseSkill {
     constructor() {
-        super("DESTROY", "즉사 (Destroy)");
+        super("DESTROY", "💀 즉사 (Destroy)");
     }
 
     onCollision(attacker, defender, midPoint) {

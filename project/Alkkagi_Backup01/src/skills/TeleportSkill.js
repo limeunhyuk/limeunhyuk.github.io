@@ -12,7 +12,7 @@ import * as THREE from 'three';
  */
 export class TeleportSkill extends BaseSkill {
     constructor() {
-        super("TELEPORT", "✨ 순간이동 (Teleport)");
+        super("TELEPORT", "순간이동 (Teleport)");
     }
 
     onInteract(intersects, pointerPos, selectionRing) {
@@ -36,12 +36,9 @@ export class TeleportSkill extends BaseSkill {
             
             createHitEffect(new THREE.Vector3(tPos.x, 0.125, tPos.z));
             
-            // 사용 마킹 (턴 전환 전에 현재 플레이어 기준으로 기록)
-            skillManager.markSkillUsed(state.currentTurn, this.id);
-
             state.currentTurn = state.currentTurn === 'black' ? 'white' : 'black';
             updateStatusUI();
-
+            
             skillManager.resetTurn();
             state.teleportSelectedStone = null;
             if (selectionRing) selectionRing.visible = false;

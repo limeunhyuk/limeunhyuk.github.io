@@ -9,7 +9,7 @@ import * as THREE from 'three';
  */
 export class RepulseSkill extends BaseSkill {
     constructor() {
-        super("REPULSE", "💥 충격파 (Repulse)");
+        super("REPULSE", "충격파 (Repulse)");
     }
 
     onCollision(attacker, defender, midPoint) {

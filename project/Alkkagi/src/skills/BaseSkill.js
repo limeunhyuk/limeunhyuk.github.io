@@ -4,46 +4,37 @@
  */
 
 export class BaseSkill {
-    constructor(id, name) {
+    /**
+     * @param {string} id     - Unique skill identifier (e.g. "MINE")
+     * @param {string} name   - Display name shown in UI
+     * @param {string} group  - 'ATTACK' | 'DISRUPTION' | null (for NONE/default)
+     */
+    constructor(id, name, group = 'ATTACK') {
         this.id = id;
         this.name = name;
+        this.group = group;
     }
 
-    /**
-     * Called when the skill is selected in the UI.
-     */
+    /** Called when the skill is selected in the UI. */
     onActivate() {}
 
-    /**
-     * Called when another skill is selected or turn ends.
-     */
+    /** Called when another skill is selected or turn ends. */
     onDeactivate() {}
 
     /**
      * Called during pointer events (AIMING state).
      * @deprecated Use onPointerDown/Move/Up instead.
-     * @returns {boolean} - Returns true if the skill handled the interaction and wants to prevent default dragging.
+     * @returns {boolean} True to prevent default dragging.
      */
-    onInteract(intersects, pointerPos, selectionRing) {
-        return false;
-    }
+    onInteract(intersects, pointerPos, selectionRing) { return false; }
 
-    /**
-     * Pointer Down Hook
-     * @returns {boolean} True if the skill intercepted the event.
-     */
+    /** @returns {boolean} True if the skill intercepted the event. */
     onPointerDown(intersects, pointerPos) { return false; }
 
-    /**
-     * Pointer Move Hook
-     * @returns {boolean} True if the skill intercepted the event.
-     */
+    /** @returns {boolean} True if the skill intercepted the event. */
     onPointerMove(intersects, pointerPos) { return false; }
 
-    /**
-     * Pointer Up Hook
-     * @returns {boolean} True if the skill intercepted the event.
-     */
+    /** @returns {boolean} True if the skill intercepted the event. */
     onPointerUp(intersects, pointerPos) { return false; }
 
     /**
@@ -60,8 +51,12 @@ export class BaseSkill {
      */
     updateVFX(deltaTime) {}
 
-    /**
-     * Called when the skill is destroyed or game resets.
-     */
+    /** Called every turn end — cleans up per-turn resources (previews, walls, etc.). */
     dispose() {}
+
+    /**
+     * Called on game restart — removes ALL persistent effects (mines, blind zones…).
+     * Override in skills that have module-level persistent state.
+     */
+    clearAll() {}
 }

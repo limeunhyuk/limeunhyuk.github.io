@@ -502,7 +502,7 @@ body {
     justify-content: center;
 }
 
-.formation-team-tab {
+button.formation-team-tab {
     font-family: 'Gowun Dodum', sans-serif;
     display: flex;
     align-items: center;
@@ -513,24 +513,34 @@ body {
     cursor: pointer;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.4);
     color: #888;
     transition: all 0.2s ease;
     flex: 1;
     max-width: 220px;
     justify-content: center;
+    box-shadow: none;
+    margin-top: 0;
 }
 
-.formation-team-tab:hover {
+button.formation-team-tab:hover {
     border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
     color: #ccc;
+    transform: none;
 }
 
-.formation-team-tab.active {
-    border-color: #e52e71;
-    background: rgba(229, 46, 113, 0.15);
+button.formation-team-tab.active {
+    border: 2px solid #ffb3c6;
+    background: #e52e71;
     color: #fff;
-    box-shadow: 0 0 14px rgba(229, 46, 113, 0.35);
+    box-shadow: 0 4px 15px rgba(229, 46, 113, 0.6);
+}
+
+.tab-team-name {
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .tab-stone {
@@ -546,6 +556,7 @@ body {
     padding: 2px 8px;
     border-radius: 10px;
     font-weight: normal;
+    white-space: nowrap;
 }
 
 .black-badge {

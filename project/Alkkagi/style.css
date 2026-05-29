@@ -239,45 +239,103 @@ body {
     box-shadow: 0 0 30px rgba(229, 46, 113, 0.4);
 }
 
+/* ── Skill Selector ──────────────────────────────────────────────── */
+
 #skill-selector {
     position: absolute;
     bottom: 20px;
     left: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 15px;
+    background: rgba(0, 0, 0, 0.78);
+    padding: 12px 14px 14px;
     border-radius: 12px;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     z-index: 100;
     pointer-events: auto;
+    max-width: 340px;
 }
 
 #skill-selector p {
     color: #ffcc00;
-    margin: 0 0 10px 0;
-    font-size: 16px;
+    margin: 0 0 8px 0;
+    font-size: 14px;
     font-weight: bold;
 }
 
+/* 전체 스킬 옵션 래퍼 */
 .skill-options {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.skill-opt {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 10px 15px;
+/* 취소/기본 버튼 */
+.skill-cancel {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.07);
+    color: #aaa;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    text-align: left;
+    text-align: center;
 }
 
-.skill-opt:hover {
+.skill-cancel:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+.skill-cancel.active {
+    background: rgba(255, 200, 0, 0.18);
+    border-color: #ffcc00;
+    color: #ffcc00;
+}
+
+/* 공격/방해 그룹 가로 배치 */
+.skill-groups-container {
+    display: flex;
+    gap: 10px;
+}
+
+.skill-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.skill-group-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffcc00;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 3px 0 4px;
+    border-bottom: 1px solid rgba(255,204,0,0.25);
+    margin-bottom: 2px;
+}
+
+.skill-group-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 공통 스킬 버튼 */
+.skill-opt {
+    background: rgba(255, 255, 255, 0.09);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 7px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.skill-opt:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.2);
 }
 
@@ -285,7 +343,452 @@ body {
     background: linear-gradient(90deg, #ff0055 0%, #ff8a00 100%);
     border-color: transparent;
     font-weight: bold;
-    box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+    box-shadow: 0 0 8px rgba(255, 0, 85, 0.5);
+}
+
+/* 이미 사용한 스킬 — 흐리게 + 클릭 불가 */
+.skill-opt.used {
+    opacity: 0.28;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    filter: grayscale(0.6);
+}
+
+.skill-opt.used:hover { background: rgba(255,255,255,0.09); }
+
+/* 상대가 방해 스킬 사용 직후 1턴간 비활성 — 노란-주황 경고색 */
+.skill-opt.disruption-blocked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: rgba(255, 160, 0, 0.45);
+    color: #ffa040;
+    filter: sepia(0.55);
+}
+.skill-opt.disruption-blocked:hover { background: rgba(255,255,255,0.09); }
+
+/* ── 스킬 선택창 턴 테마 ──────────────────────────────────────────────── */
+
+/* 공통 전환 애니메이션 */
+#skill-selector, #ui-container, #status-container, #camera-controls-guide {
+    transition: border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* ▌흑(Black) 차례 — 짙은 슬레이트 · 회색 액센트 */
+#skill-selector.turn-black,
+#ui-container.turn-black,
+#status-container.turn-black,
+#camera-controls-guide.turn-black {
+    border-color: rgba(180, 180, 190, 0.50);
+    background: rgba(6, 6, 10, 0.90);
+    box-shadow: 0 0 18px rgba(120, 120, 140, 0.30), inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+#skill-selector.turn-black > p {
+    color: #b8b8c0;
+}
+#skill-selector.turn-black .skill-group-label {
+    color: #909098;
+    border-bottom-color: rgba(160, 160, 175, 0.30);
+}
+#skill-selector.turn-black .skill-opt {
+    color: #cccccc;
+    border-color: rgba(190, 190, 200, 0.22);
+    background: rgba(255, 255, 255, 0.055);
+}
+#skill-selector.turn-black .skill-opt:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.13);
+    color: #ffffff;
+}
+#skill-selector.turn-black .skill-opt.active {
+    background: linear-gradient(90deg, #252528 0%, #505055 100%);
+    border-color: #909090;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 0 9px rgba(190, 190, 200, 0.50);
+}
+#skill-selector.turn-black .skill-cancel {
+    color: #999;
+    border-color: rgba(190, 190, 200, 0.20);
+    background: rgba(255, 255, 255, 0.04);
+}
+#skill-selector.turn-black .skill-cancel.active {
+    background: rgba(140, 140, 150, 0.18);
+    border-color: #888;
+    color: #cccccc;
+}
+
+/* ▌백(White) 차례 — 밝은 펄 · 흰색 액센트 */
+#skill-selector.turn-white,
+#ui-container.turn-white,
+#status-container.turn-white,
+#camera-controls-guide.turn-white {
+    border-color: rgba(255, 255, 255, 0.70);
+    background: rgba(220, 225, 240, 0.10);
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.35), inset 0 0 10px rgba(255, 255, 255, 0.04);
+}
+#skill-selector.turn-white > p {
+    color: #ffffff;
+}
+#skill-selector.turn-white .skill-group-label {
+    color: #f0f0f0;
+    border-bottom-color: rgba(255, 255, 255, 0.35);
+}
+#skill-selector.turn-white .skill-opt {
+    color: #f8f8f8;
+    border-color: rgba(255, 255, 255, 0.30);
+    background: rgba(255, 255, 255, 0.08);
+}
+#skill-selector.turn-white .skill-opt:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+#skill-selector.turn-white .skill-opt.active {
+    background: linear-gradient(90deg, #c8c8cc 0%, #ffffff 100%);
+    border-color: #ffffff;
+    color: #111111;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
+}
+#skill-selector.turn-white .skill-cancel {
+    color: #ddd;
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.06);
+}
+#skill-selector.turn-white .skill-cancel.active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.65);
+    color: #ffffff;
+}
+
+/* ── 포진 선택 화면 ────────────────────────────────────────────────────── */
+
+.formation-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-height: 95vh;
+    overflow-y: auto;
+    padding: 20px 30px 30px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 60px rgba(229, 46, 113, 0.25);
+    scrollbar-width: thin;
+    scrollbar-color: #e52e71 transparent;
+}
+
+.formation-title {
+    font-family: 'Jua', sans-serif;
+    font-size: 36px;
+    margin: 0;
+    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.formation-subtitle {
+    margin: -8px 0 0;
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* ── 팀 탭 ─────────────────────────────────────────────────────────────── */
+
+.formation-team-tabs {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+}
+
+button.formation-team-tab {
+    font-family: 'Gowun Dodum', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.4);
+    color: #888;
+    transition: all 0.2s ease;
+    flex: 1;
+    max-width: 220px;
+    justify-content: center;
+    box-shadow: none;
+    margin-top: 0;
+}
+
+button.formation-team-tab:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    transform: none;
+}
+
+button.formation-team-tab.active {
+    border: 2px solid #ffb3c6;
+    background: #e52e71;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(229, 46, 113, 0.6);
+}
+
+.tab-team-name {
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.tab-stone {
+    font-size: 14px;
+}
+
+.white-s {
+    color: #ddd;
+}
+
+.tab-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.black-badge {
+    background: rgba(100, 150, 255, 0.2);
+    color: #8ab4ff;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+}
+
+.white-badge {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ddd;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 커스텀 에디터 레이블 */
+.custom-editor-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #7aabff;
+    letter-spacing: 0.5px;
+}
+
+/* 팀 버튼 (기존 코드 호환용 — 현재 숨김) */
+.custom-team-btns {
+    display: none;
+}
+
+/* 포진 카드 그리드 */
+.formation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 140px);
+    gap: 12px;
+}
+
+.formation-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.formation-card:hover {
+    border-color: rgba(255, 138, 0, 0.6);
+    background: rgba(255, 138, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.formation-card.selected {
+    border-color: #e52e71;
+    background: rgba(229, 46, 113, 0.15);
+    box-shadow: 0 0 16px rgba(229, 46, 113, 0.4);
+}
+
+.preview-canvas {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 200, 100, 0.25);
+    display: block;
+}
+
+.formation-custom-icon {
+    width: 110px;
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 200, 100, 0.4);
+    background: rgba(255, 200, 100, 0.05);
+    font-size: 32px;
+    gap: 4px;
+}
+
+.formation-custom-pen {
+    font-size: 36px;
+}
+
+.formation-custom-icon small {
+    font-size: 10px;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.formation-card-name {
+    font-family: 'Jua', sans-serif;
+    font-size: 15px;
+    color: #fff;
+}
+
+.formation-card-desc {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+}
+
+/* 커스텀 에디터 */
+.custom-editor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 200, 100, 0.2);
+    border-radius: 12px;
+    width: fit-content;
+}
+
+.custom-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.custom-team-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.team-btn {
+    font-family: 'Gowun Dodum', sans-serif;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    transition: all 0.2s;
+}
+
+.team-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.team-btn.active {
+    border-color: #7aabff;
+    background: rgba(122, 171, 255, 0.2);
+    color: #7aabff;
+    box-shadow: 0 0 8px rgba(122, 171, 255, 0.3);
+}
+
+.custom-clear-btn {
+    font-family: 'Gowun Dodum', sans-serif;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 80, 80, 0.4);
+    background: rgba(255, 80, 80, 0.1);
+    color: #f88;
+    transition: all 0.2s;
+}
+
+.custom-clear-btn:hover {
+    background: rgba(255, 80, 80, 0.25);
+}
+
+#custom-canvas {
+    border-radius: 10px;
+    border: 1px solid rgba(255, 200, 100, 0.3);
+    cursor: crosshair;
+    max-width: 340px;
+    max-height: 340px;
+}
+
+.custom-count-info {
+    font-size: 12px;
+    color: #bbb;
+    text-align: center;
+}
+
+.cinfo-black { color: #7aabff; font-weight: bold; }
+.cinfo-white { color: #eee;    font-weight: bold; }
+.cinfo-sep   { color: #555; }
+.cinfo-hint  { color: #777; font-size: 11px; }
+
+/* 게임 시작 버튼 */
+.btn-confirm-formation {
+    font-family: 'Gowun Dodum', sans-serif;
+    padding: 14px 50px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(90deg, #e52e71, #ff8a00);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s, opacity 0.2s;
+    box-shadow: 0 4px 18px rgba(229, 46, 113, 0.5);
+    margin-top: 4px;
+}
+
+.btn-confirm-formation:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.btn-confirm-formation:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #555;
+    box-shadow: none;
+}
+
+/* 뒤로 가기 버튼 */
+.btn-formation-back {
+    font-family: 'Gowun Dodum', sans-serif;
+    padding: 8px 24px;
+    font-size: 14px;
+    cursor: pointer;
+    background: transparent;
+    color: #888;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    transition: all 0.2s;
+    margin-top: -8px;
+}
+
+.btn-formation-back:hover {
+    color: #ccc;
+    border-color: rgba(255, 255, 255, 0.35);
 }
 
 /* Camera Controls Guide */
