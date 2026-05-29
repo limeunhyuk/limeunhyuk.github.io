@@ -35,11 +35,18 @@ export async function initEngine() {
     ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 10);
+    dirLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    dirLight.position.set(20, 20, 0);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
+    const shadowSize = 20;
+    dirLight.shadow.camera.left = -shadowSize;
+    dirLight.shadow.camera.right = shadowSize;
+    dirLight.shadow.camera.top = shadowSize;
+    dirLight.shadow.camera.bottom = -shadowSize;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 100;
     scene.add(dirLight);
 
     window.addEventListener('resize', () => {

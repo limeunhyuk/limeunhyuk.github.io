@@ -14,6 +14,14 @@ export function createEnvironment() {
 
     if (assets.models.environment) {
         const env = assets.models.environment.clone();
+        env.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+        env.position.y -= 22.3;
+        env.scale.setScalar(26);
         scene.add(env);
     } else {
         // Fallback to original procedural code
