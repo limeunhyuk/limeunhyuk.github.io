@@ -11,6 +11,7 @@ import { skillManager } from './SkillManager.js';
 import { updateParticles } from './skillsVFX.js';
 import { showGameOver, toggleGameUI } from './ui.js';
 import { updateCamera as updateCameraLogic, setCameraMode, CAMERA_MODES, getCamera, updateActionCamera } from './cameraManager.js';
+import { WallSkill } from './skills/WallSkill.js';
 
 let lastTime = 0;
 
@@ -70,11 +71,25 @@ function handleCollisionEvents() {
         if (started) {
             const obj1 = objects.find(o => o.body.handle === handle1);
             const obj2 = objects.find(o => o.body.handle === handle2);
+
+            // Case 1: Stone vs Stone
             if (obj1 && obj2 && obj1.type === 'stone' && obj2.type === 'stone') {
                 if (!state.firstCollisionOccurred) {
                     state.firstCollisionOccurred = true;
                     const midPoint = new THREE.Vector3().addVectors(obj1.mesh.position, obj2.mesh.position).multiplyScalar(0.5);
                     skillManager.handleCollision(obj1, obj2, midPoint);
+                }
+            }
+
+            // Case 2: Stone vs Wall
+            const wall = WallSkill.activeInstance;
+            if (wall && wall.placedWall) {
+                const wallHandle = wall.placedWall.body.handle;
+                if (handle1 === wallHandle || handle2 === wallHandle) {
+                    const stoneObj = obj1 || obj2;
+                    if (stoneObj && stoneObj.type === 'stone') {
+                        wall.onWallHit(stoneObj.mesh.position);
+                    }
                 }
             }
         }

@@ -83,7 +83,7 @@ async function init() {
         }
     });
 
-    animate();
+    animate(0);
 }
 
 /** 포진 선택 화면의 "← 뒤로" 버튼을 시작 화면으로 돌아가도록 연결 */

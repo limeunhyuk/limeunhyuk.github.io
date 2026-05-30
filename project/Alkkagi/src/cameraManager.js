@@ -27,8 +27,8 @@ const keys = { w: false, a: false, s: false, d: false, q: false, e: false, Arrow
 let camTarget = new THREE.Vector3(0, 0, 0);
 let camTheta = 0; // horizontal angle
 let camPhi = 0.245; // vertical angle from top (approx atan(10/40))
-let camRadius = 32.0; // zoomed in so board fills screen vertically
-
+let defatultCamRadius = 32.0; // default cam distance
+let camRadius = defatultCamRadius; // zoomed in so board fills screen vertically
 
 // Exported APIs
 
@@ -251,7 +251,7 @@ export function updateCamera(deltaTime) {
             // Zoom
             if (keys.q) camRadius -= zoomSpeed;
             if (keys.e) camRadius += zoomSpeed;
-            camRadius = Math.max(10.0, Math.min(100.0, camRadius));
+            camRadius = Math.max(10.0, Math.min(58.0, camRadius));
 
             // Constrain phi (0 = directly above, 70 degrees = Math.PI * 70 / 180)
             const MAX_PHI = (70 * Math.PI) / 180;
