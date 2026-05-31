@@ -85,9 +85,9 @@ export function initCameraManager(scene, domElement) {
             camPhi = 0.245;
             camRadius = 32.0;
         }
-        if (key >= '1' && key <= '5') {
-            setBrightness(parseInt(key));
-        }
+        // if (key >= '1' && key <= '5') {
+        //     setBrightness(parseInt(key));
+        // }
         if (key === 'w' || key === 'W') keys.w = true;
         if (key === 's' || key === 'S') keys.s = true;
         if (key === 'a' || key === 'A') keys.a = true;
@@ -254,7 +254,7 @@ export function updateCamera(deltaTime) {
             camRadius = Math.max(10.0, Math.min(58.0, camRadius));
 
             // Constrain phi (0 = directly above, 70 degrees = Math.PI * 70 / 180)
-            const MAX_PHI = (70 * Math.PI) / 180;
+            const MAX_PHI = (80 * Math.PI) / 180;
             camPhi = Math.max(0.1, Math.min(MAX_PHI, camPhi));
 
             // Movement relative to camera orientation

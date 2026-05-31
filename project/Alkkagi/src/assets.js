@@ -19,8 +19,7 @@ const gltfLoader = new GLTFLoader();
 // Preloads .glb models and textures.
 export async function loadAssets() {
     const texturePaths = {
-        tatami: 'assets/textures/tatami.png',
-        wood: 'assets/textures/wood.png'
+        skybox: 'assets/textures/skybox.jpeg'
     };
 
     const modelPaths = {
