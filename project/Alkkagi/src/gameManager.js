@@ -1,6 +1,9 @@
 /**
- * src/gameManager.js
- * Role: Game loop & State transition orchestrator.
+ * @file gameManager.js
+ * @description
+ * - 게임의 핵심 렌더링 루프 및 상태 변환(상태 기계)을 관리
+ * - 매 프레임마다 물리 연산, 파티클 업데이트, 카메라 추적을 지시
+ * - 턴 종료 조건(모든 돌의 정지 여부)을 판별
  */
 import * as THREE from 'three';
 import TWEEN from 'three/addons/libs/tween.module.js';
@@ -16,8 +19,12 @@ import { WallSkill } from './skills/WallSkill.js';
 
 let lastTime = 0;
 
-/** Game's main loop
- *  Runs every frame.
+/**
+ * @function animate
+ * @description
+ * - 브라우저의 requestAnimationFrame에 바인딩되는 메인 게임 루프
+ * - 델타 타임(경과 시간)을 계산하여 애니메이션과 물리 시뮬레이션의 속도를 동기화
+ * @param {number} time - 경과 시간 (밀리초)
  */
 export function animate(time) {
     requestAnimationFrame(animate);
@@ -35,7 +42,13 @@ export function animate(time) {
     renderer.render(scene, getCamera());
 }
 
-/** 턴의 진행 상태(조준/이동/연출)에 따른 물리 및 카메라 업데이트 제어 */
+/**
+ * @function handleGameStateLogic
+ * @description
+ * - 현재 게임 상태(조준, 이동, 줌 등)에 맞게 로직을 분기하여 실행
+ * - 이동(MOVING) 상태일 경우 슬로우 모션 제어, 충돌 감지, 턴 종료 검사 수행
+ * @param {number} deltaTime - 프레임 간 경과 시간
+ */
 function handleGameStateLogic(deltaTime) {
     if (state.gameState === "MOVING" || state.gameState === "AIMING" || state.gameState === "GAMEOVER") {
         let targetSlowMo = 1.0;
@@ -46,10 +59,11 @@ function handleGameStateLogic(deltaTime) {
             state.lockedPair = cameraResult.newLockedPair;
         }
 
+        // 부드러운 슬로우 모션 전환을 위해 보간(Lerp) 적용
         state.currentSlowMoFactor += (targetSlowMo - state.currentSlowMoFactor) * 0.1;
         updateCameraLogic(deltaTime);
 
-        // 물리 세계 업데이트 (슬로우 모션 팩터 반영)
+        // 물리 세계 업데이트 (슬로우 모션 팩터를 적용해 시간의 흐름 조절)
         objects.forEach(obj => { if (obj.active) obj.prevLinvel = { ...obj.body.linvel() }; });
         physicsWorld.timestep = (1.0 / 60.0) * Math.max(0.01, state.currentSlowMoFactor);
         physicsWorld.step(eventQueue);
@@ -59,22 +73,30 @@ function handleGameStateLogic(deltaTime) {
             checkMovementStopped();
         }
         
-        updateMeshPositions(objects);   // sync Three.js mesh transform with physics body
+        // 물리 연산 결과 위치를 Three.js 렌더링 메쉬에 동기화
+        updateMeshPositions(objects);
         checkFallOffBoard(showGameOver);
 
     } else if (state.gameState === "ZOOMING_IN" || state.gameState === "ZOOMING_OUT" || state.gameState === "MINIGAME" || state.gameState === "RETURN_TO_AIM") {
+        // 미니게임이나 연출 상태에서는 물리 연산을 멈추고 카메라만 업데이트
         updateCameraLogic(deltaTime);
     }
 }
 
-/** 물리 충돌 큐를 비우고, 첫 번째 유효 충돌 시 스킬 트리거 */
+/**
+ * @function handleCollisionEvents
+ * @description
+ * - Rapier 물리 엔진의 충돌 큐를 비우고 발생한 이벤트를 분석
+ * - 첫 번째 돌 간 충돌을 감지하여 스킬을 트리거 (예: 스나이퍼, 반사 등)
+ * - 장벽(Wall) 스킬과의 충돌도 여기서 감지하여 처리
+ */
 function handleCollisionEvents() {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
         if (started) {
             const obj1 = objects.find(o => o.body.handle === handle1);
             const obj2 = objects.find(o => o.body.handle === handle2);
 
-            // Case 1: Stone vs Stone
+            // 돌 vs 돌 충돌 처리
             if (obj1 && obj2 && obj1.type === 'stone' && obj2.type === 'stone') {
                 if (!state.firstCollisionOccurred) {
                     state.firstCollisionOccurred = true;
@@ -83,7 +105,7 @@ function handleCollisionEvents() {
                 }
             }
 
-            // Case 2: Stone vs Wall
+            // 돌 vs 장벽(Wall) 충돌 처리
             const wall = WallSkill.activeInstance;
             if (wall && wall.placedWall) {
                 const wallHandle = wall.placedWall.body.handle;
@@ -98,7 +120,13 @@ function handleCollisionEvents() {
     });
 }
 
-/** 모든 돌의 속도가 임계치 이하인지 확인하여 턴 종료 처리 */
+/**
+ * @function checkMovementStopped
+ * @description
+ * - 화면에 있는 모든 활성 돌들의 선속도를 검사
+ * - 모든 돌의 속도가 임계점(0.1) 이하로 떨어지면 이동이 끝난 것으로 간주하여 턴 종료 처리
+ * - 조준(AIMING) 상태로 전환하고 카메라를 초기 위치로 복귀
+ */
 function checkMovementStopped() {
     let movingCount = 0;
     objects.forEach((obj) => {

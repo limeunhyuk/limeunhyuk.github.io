@@ -1,16 +1,33 @@
 /**
- * src/ui.js
- * Role: UI Management (DOM elements, Scoreboard, Overlays, Skill Selector).
+ * @file ui.js
+ * @description
+ * - HTML DOM 요소들을 조작하여 게임 UI(메뉴, 점수판, 스킬 선택창 등)를 렌더링하고 관리
+ * - 스킬 버튼의 동적 생성 및 사용 횟수 제한(1회 사용 시 비활성화) 처리
+ * - 턴 전환 시 UI 색상 테마(흑/백) 변경 및 화면 렌더링 전환 제어
  */
+
 import { state }        from './state.js';
 import { skillManager } from './SkillManager.js';
 
+// ── UI 요소 참조 변수들 ──
+// 리듬 미니게임 관련
 export let rhythmUi, shrinkingRing, rhythmText;
+// 점수 및 상태 관련
 export let turnIndicator, blackScore, whiteScore;
+// 화면 덮개 및 컨테이너
 export let uiContainer, statusContainer;
 export let startScreen, gameOverScreen, winnerText;
+// 초기 설정 입력창
 export let inputBlack, inputWhite;
 
+/**
+ * @function initUI
+ * @description
+ * - DOM 요소를 찾아 참조 변수에 할당
+ * - 버튼 클릭 이벤트(시작, 재시작, 메인으로) 리스너 등록
+ * - 스킬 매니저에 등록된 스킬들을 바탕으로 스킬 선택 버튼을 동적으로 생성
+ * @param {Object} callbacks - 각 버튼 클릭 시 호출될 콜백 함수 모음 (onStart, onRestart, onToStart, onSkillSelect)
+ */
 export function initUI(callbacks) {
     const { onStart, onRestart, onToStart, onSkillSelect } = callbacks;
 
@@ -38,11 +55,14 @@ export function initUI(callbacks) {
     generateSkillUI(onSkillSelect);
 }
 
-// ── Skill UI generation ───────────────────────────────────────────
+// ── 스킬 UI 생성 영역 ──
 
 /**
- * 스킬 버튼을 공격/방해 두 그룹으로 생성.
- * NONE 스킬은 "취소" 버튼으로 상단에 별도 표시.
+ * @function generateSkillUI
+ * @description
+ * - skillManager에 등록된 스킬 데이터를 가져와 공격/방해 두 그룹으로 나누어 버튼 렌더링
+ * - 'NONE' 스킬은 스킬 취소용 버튼으로 최상단에 별도 배치
+ * @param {Function} onSkillSelect - 스킬 버튼 클릭 시 호출될 콜백
  */
 function generateSkillUI(onSkillSelect) {
     const container = document.getElementById('skill-options');
@@ -51,16 +71,16 @@ function generateSkillUI(onSkillSelect) {
 
     const allSkills = skillManager.getRegisteredSkills();
 
-    // ── "취소 / 기본" 버튼 ──────────────────────────────────────
+    // 1. "취소 / 기본(NONE)" 버튼 최상단 배치
     const noneSkill = allSkills.find(s => s.id === 'NONE');
     if (noneSkill) {
         const cancelBtn = _makeSkillBtn(noneSkill, onSkillSelect);
         cancelBtn.classList.add('skill-cancel');
-        cancelBtn.classList.add('active');
+        cancelBtn.classList.add('active'); // 기본 상태는 항상 '취소'
         container.appendChild(cancelBtn);
     }
 
-    // ── 두 그룹 ──────────────────────────────────────────────────
+    // 2. 공격 스킬과 방해 스킬을 그룹핑하여 렌더링
     const groupWrapper = document.createElement('div');
     groupWrapper.className = 'skill-groups-container';
 
@@ -95,6 +115,10 @@ function generateSkillUI(onSkillSelect) {
     container.appendChild(groupWrapper);
 }
 
+/**
+ * @function _makeSkillBtn
+ * @description 단일 스킬 버튼 DOM 엘리먼트 생성 헬퍼 함수
+ */
 function _makeSkillBtn(skill, onSkillSelect) {
     const btn = document.createElement('button');
     btn.className = 'skill-opt';
@@ -104,11 +128,13 @@ function _makeSkillBtn(skill, onSkillSelect) {
     return btn;
 }
 
-// ── Skill availability (once-per-game per player) ────────────────
+// ── 스킬 사용 가능 여부 갱신 ──
 
 /**
- * 현재 턴 플레이어의 이미 사용한 스킬을 비활성화한다.
- * resetSkillUI(), toggleGameUI(true) 에서 호출.
+ * @function updateSkillAvailabilityUI
+ * @description
+ * - 플레이어가 스킬을 1번씩만 쓸 수 있도록, 이미 쓴 스킬 버튼에 'used' 클래스를 추가하고 비활성화(disabled)
+ * - 상대가 직전 턴에 방해 스킬을 썼다면, 연속 방해를 막기 위해 방해 스킬 그룹을 1턴간 강제 비활성화
  */
 export function updateSkillAvailabilityUI() {
     document.querySelectorAll('.skill-opt[data-skill]').forEach(btn => {
@@ -117,7 +143,7 @@ export function updateSkillAvailabilityUI() {
 
         const used = skillManager.isSkillUsed(id);
 
-        // 상대방이 방해 스킬을 사용한 직후 1턴은 방해 스킬 비활성화
+        // 방해 스킬 연속 사용 금지 룰 체크
         const skill = skillManager.skills.get(id);
         const disruptionBlocked = skill?.group === 'DISRUPTION' && state.disruptionUsedLastTurn;
 
@@ -127,17 +153,20 @@ export function updateSkillAvailabilityUI() {
         btn.classList.toggle('disruption-blocked', disruptionBlocked && !used);
         btn.disabled = disabled;
 
+        // 비활성화된 스킬이 현재 활성 상태로 남아있다면 해제
         if (disabled && btn.classList.contains('active')) {
             btn.classList.remove('active');
         }
     });
 }
 
-// ── Skill Selector Turn Theme ────────────────────────────────────
+// ── UI 턴 테마 변경 ──
 
 /**
- * 모든 UI 컨테이너의 테마 클래스를 현재 턴(흑/백)에 맞게 갱신한다.
- * updateStatusUI(), resetSkillUI(), toggleGameUI() 에서 호출.
+ * @function updateUITheme
+ * @description
+ * - 흑턴과 백턴에 따라 스킬 선택창, 조작 가이드 등 주요 UI 박스 테두리와 배경색 테마 변경
+ * - CSS 클래스('turn-black', 'turn-white') 토글 방식으로 처리
  */
 function updateUITheme() {
     const isBlack = state.currentTurn === 'black';
@@ -157,34 +186,50 @@ function updateUITheme() {
     });
 }
 
-// ── Status & Score ────────────────────────────────────────────────
+// ── 점수 및 상태 업데이트 ──
 
+/**
+ * @function updateStatusUI
+ * @description
+ * - 상단 점수판의 현재 턴, 남은 흑돌/백돌 개수를 텍스트로 반영
+ * - UI 테마와 스킬 사용 가능 여부도 함께 갱신
+ */
 export function updateStatusUI() {
     if (!turnIndicator) return;
-    turnIndicator.innerText =
-        `현재 차례: ${state.currentTurn === 'black' ? '흑(Black)' : '백(White)'}`;
+    turnIndicator.innerText = `현재 차례: ${state.currentTurn === 'black' ? '흑(Black)' : '백(White)'}`;
     turnIndicator.style.color = state.currentTurn === 'black' ? '#aaaaaa' : '#ffffff';
 
     blackScore.innerText = `${state.currentBlack} / ${state.totalBlack}`;
     whiteScore.innerText = `${state.currentWhite} / ${state.totalWhite}`;
 
-    // 스킬 선택창 색상 테마 + 사용 가능 여부 갱신
     updateUITheme();
     updateSkillAvailabilityUI();
 }
 
+/**
+ * @function resetSkillUI
+ * @description
+ * - 선택되어 있던 모든 스킬 버튼의 활성화 상태 해제 후, 기본값('NONE')으로 강제 선택
+ * - 턴이 넘어갈 때 주로 호출됨
+ */
 export function resetSkillUI() {
     document.querySelectorAll('.skill-opt').forEach(b => b.classList.remove('active'));
     const def = document.querySelector('.skill-opt[data-skill="NONE"]');
     if (def) def.classList.add('active');
 
-    // 테마 + 사용 가능 여부 갱신 (턴이 바뀐 후 호출)
     updateUITheme();
     updateSkillAvailabilityUI();
 }
 
-// ── Game Over ─────────────────────────────────────────────────────
+// ── 게임 오버 화면 ──
 
+/**
+ * @function showGameOver
+ * @description
+ * - 턴이 종료되고 승패가 났을 때 호출됨
+ * - 승자 텍스트를 업데이트하고 1초 뒤에 게임 오버 스크린을 화면에 띄움
+ * @param {string} winner - 'black', 'white', 'draw'
+ */
 export function showGameOver(winner) {
     state.gameState = "GAMEOVER";
     winnerText.innerText =
@@ -195,8 +240,14 @@ export function showGameOver(winner) {
     setTimeout(() => { gameOverScreen.style.display = 'flex'; }, 1000);
 }
 
-// ── UI Visibility ─────────────────────────────────────────────────
+// ── 전체 UI 가시성 토글 ──
 
+/**
+ * @function toggleGameUI
+ * @description
+ * - 게임 루프 중 연출(예: 이동 중, 스킬 컷신 중)이 발생할 때 방해가 되지 않도록 게임 UI 전체를 숨기거나 다시 켬
+ * @param {boolean} visible - 보일지 여부
+ */
 export function toggleGameUI(visible) {
     const d = visible ? 'block' : 'none';
     if (uiContainer)     uiContainer.style.display = d;
@@ -208,7 +259,6 @@ export function toggleGameUI(visible) {
     const camGuide = document.getElementById('camera-controls-guide');
     if (camGuide)        camGuide.style.display = d;
 
-    // UI가 표시될 때 테마 + 스킬 가용 여부 갱신
     if (visible) {
         updateUITheme();
         updateSkillAvailabilityUI();
