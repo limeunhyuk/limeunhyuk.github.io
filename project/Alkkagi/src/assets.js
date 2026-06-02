@@ -23,7 +23,7 @@ export async function loadAssets() {
     };
 
     const modelPaths = {
-        environment: 'assets/models/environment.glb',
+        environment: 'assets/models/environment1.glb',
         stone: 'assets/models/stone.glb',
         character: 'assets/models/character.glb'
     };
