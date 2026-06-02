@@ -45,12 +45,13 @@ export function initInteraction() {
     trajectoryLine.visible = false;
     scene.add(trajectoryLine);
 
-    hoverSpotLight = new THREE.SpotLight(0xffffff, 10);
+    hoverSpotLight = new THREE.SpotLight(0xffffff, 25);
     hoverSpotLight.angle = Math.PI / 8;
-    hoverSpotLight.penumbra = 0.5;
+    hoverSpotLight.penumbra = 0.8;
     hoverSpotLight.decay = 2;
     hoverSpotLight.distance = 10;
     hoverSpotLight.castShadow = true;
+    hoverSpotLight.shadow.bias = -0.0001;
     hoverSpotLight.visible = false;
     scene.add(hoverSpotLight);
     scene.add(hoverSpotLight.target);

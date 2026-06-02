@@ -16,8 +16,13 @@ export function createEnvironment() {
         const env = assets.models.environment.clone();
         env.traverse((child) => {
             if (child.isMesh) {
-                child.castShadow = true;
+                const isRoom = child.name.includes('Room');
+                child.castShadow = !isRoom;
                 child.receiveShadow = true;
+                child.renderOrder = -1;
+                if (child.material) {
+                    child.material.depthWrite = true;
+                }
             }
         });
         env.position.y -= 22.3;

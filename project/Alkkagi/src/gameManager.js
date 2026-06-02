@@ -9,6 +9,7 @@ import { state } from './state.js';
 import { objects, checkFallOffBoard } from './stone.js';
 import { skillManager } from './SkillManager.js';
 import { updateParticles } from './skillsVFX.js';
+import { updateWeather } from './weather.js';
 import { showGameOver, toggleGameUI } from './ui.js';
 import { updateCamera as updateCameraLogic, setCameraMode, CAMERA_MODES, getCamera, updateActionCamera } from './cameraManager.js';
 import { WallSkill } from './skills/WallSkill.js';
@@ -29,6 +30,7 @@ export function animate(time) {
     handleGameStateLogic(deltaTime);
     skillManager.updateVFX(deltaTime); 
     updateParticles();
+    updateWeather(deltaTime);
     
     renderer.render(scene, getCamera());
 }

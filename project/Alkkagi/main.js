@@ -11,6 +11,7 @@ import { initUI, updateStatusUI, resetSkillUI, toggleGameUI, updateSkillAvailabi
 import { initInteraction } from './src/interaction.js';
 import { skillManager } from './src/SkillManager.js';
 import { animate } from './src/gameManager.js';
+import { initWeather } from './src/weather.js';
 import { initCameraManager, setCameraMode, snapCameraTo, CAMERA_MODES } from './src/cameraManager.js';
 import { showFormationScreen } from './src/formation.js';
 import * as THREE from 'three';
@@ -31,6 +32,7 @@ async function init() {
     await loadAssets();
     skillManager.initSkills();
     createEnvironment();
+    initWeather(scene);
     initInteraction();
 
     initUI({

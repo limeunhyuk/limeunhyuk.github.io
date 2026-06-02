@@ -38,9 +38,11 @@ export async function initEngine() {
     dirLight = new THREE.DirectionalLight(0xffffff, 2.8);
     dirLight.position.set(20, 20, 0);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    const shadowSize = 20;
+    dirLight.shadow.mapSize.width = 4096;
+    dirLight.shadow.mapSize.height = 4096;
+    dirLight.shadow.bias = -0.0004;
+    dirLight.shadow.normalBias = 0.008;
+    const shadowSize = 35;
     dirLight.shadow.camera.left = -shadowSize;
     dirLight.shadow.camera.right = shadowSize;
     dirLight.shadow.camera.top = shadowSize;

@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { setBrightness } from './engine.js';
+import { setWeather } from './weather.js';
 
 // Private Variables
 let camera = null;           // 메인 카메라 객체
@@ -85,9 +86,12 @@ export function initCameraManager(scene, domElement) {
             camPhi = 0.245;
             camRadius = 32.0;
         }
-        // if (key >= '1' && key <= '5') {
-        //     setBrightness(parseInt(key));
-        // }
+        if (key >= '1' && key <= '5') {
+            setBrightness(parseInt(key));
+        }
+        if (['6','7','8','9','0'].includes(key)) {
+            setWeather(key);
+        }
         if (key === 'w' || key === 'W') keys.w = true;
         if (key === 's' || key === 'S') keys.s = true;
         if (key === 'a' || key === 'A') keys.a = true;
